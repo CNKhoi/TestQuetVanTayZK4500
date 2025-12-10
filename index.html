@@ -1,1298 +1,853 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 Fingerprint Scanner - Live Fingerprint Display</title>
+    <title>ZK4500 Fingerprint Test - Java Web App</title>
     <style>
         :root {
             --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
             --success: #2ec4b6;
             --danger: #e71d36;
             --warning: #ff9f1c;
-            --info: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: var(--dark);
+            color: #333;
         }
-
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
-
+        
         .header {
             text-align: center;
             margin-bottom: 30px;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
+        
         .header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
+            color: var(--primary);
+            margin-bottom: 10px;
         }
-
-        .status-alert {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            color: white;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
+        
         .dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 25px;
-            margin-bottom: 35px;
         }
-
+        
         @media (max-width: 992px) {
             .dashboard {
                 grid-template-columns: 1fr;
             }
         }
-
+        
         .card {
-            background: white;
-            border-radius: 18px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-
-        .card h2 {
-            color: var(--primary);
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            border: 2px solid #dee2e6;
         }
-
-        /* Fingerprint Visualization */
-        .fingerprint-visualization {
-            position: relative;
+        
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .status-connected {
+            background: rgba(46, 196, 182, 0.2);
+            color: #155724;
+            border: 2px solid var(--success);
+        }
+        
+        .status-disconnected {
+            background: rgba(231, 29, 54, 0.1);
+            color: #721c24;
+            border: 2px solid var(--danger);
+        }
+        
+        .fingerprint-display {
             width: 100%;
-            height: 400px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 15px;
+            height: 300px;
+            background: #212529;
+            border-radius: 10px;
+            position: relative;
             overflow: hidden;
-            border: 3px solid var(--border);
+            margin-bottom: 20px;
         }
-
-        .fingerprint-canvas-container {
+        
+        .fingerprint-canvas {
             width: 100%;
             height: 100%;
-            position: relative;
         }
-
-        #fingerprintCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
+        
         .fingerprint-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            z-index: 10;
-            transition: opacity 0.5s;
-        }
-
-        .fingerprint-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Scanner Animation */
-        .scanner-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                var(--primary) 50%, 
-                transparent 100%);
-            animation: scan 2s linear infinite;
-            z-index: 5;
-            opacity: 0.8;
-            box-shadow: 0 0 20px var(--primary);
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            50% { top: 100%; }
-            100% { top: 0; }
-        }
-
-        /* Fingerprint Pattern */
-        .fingerprint-pattern {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 25% 25%, var(--primary) 2px, transparent 3px),
-                radial-gradient(circle at 75% 25%, var(--primary) 2px, transparent 3px),
-                radial-gradient(circle at 25% 75%, var(--primary) 2px, transparent 3px),
-                radial-gradient(circle at 75% 75%, var(--primary) 2px, transparent 3px);
-            background-size: 100px 100px;
-            opacity: 0.3;
-            z-index: 1;
-        }
-
-        .fingerprint-dots {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-        }
-
-        .fingerprint-dot {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: var(--primary);
-            border-radius: 50%;
-            transform: scale(0);
-            transition: transform 0.3s;
-        }
-
-        .fingerprint-dot.active {
-            transform: scale(1);
-            background: var(--success);
-            box-shadow: 0 0 10px var(--success);
-        }
-
-        /* Fingerprint Info Display */
-        .fingerprint-info-display {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-            padding: 20px;
-            background: var(--light);
-            border-radius: 10px;
-        }
-
-        .info-box {
-            text-align: center;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .info-box .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 10px 0;
-        }
-
-        .info-box .label {
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        /* Quality Meter */
-        .quality-meter {
-            height: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-
-        .quality-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
-            width: 0%;
-            transition: width 0.5s;
-        }
-
-        /* Connection Panel */
-        .connection-panel {
-            display: grid;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--success) 0%, #20a997 100%);
-            color: white;
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, var(--warning) 0%, #e68a00 100%);
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Fingerprint Actions */
-        .fingerprint-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .action-btn {
-            padding: 12px;
-            background: var(--light);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .action-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        /* Log Display */
-        .log-container {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-        }
-
-        .log-entry {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            word-break: break-word;
-        }
-
-        .log-entry.scan {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .log-entry.error {
-            color: var(--danger);
-        }
-
-        .notification {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            padding: 20px 30px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            transform: translateX(150%);
-            transition: transform 0.4s;
-            z-index: 1000;
-            max-width: 400px;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, var(--success) 0%, #20a997 100%);
-        }
-
-        .notification.warning {
-            background: linear-gradient(135deg, var(--warning) 0%, #e68a00 100%);
-        }
-
-        /* Live Preview */
-        .live-preview {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            background: #000;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        .live-preview canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        .live-preview-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 1.2rem;
         }
-
-        /* Fingerprint Details */
-        .fingerprint-details {
-            display: none;
-            position: fixed;
+        
+        .scanner-line {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1001;
+            height: 4px;
+            background: var(--primary);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
         }
-
-        .fingerprint-details.active {
-            display: flex;
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
         }
-
-        .details-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
+        
+        .btn-primary:hover {
+            background: #3a56d4;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .data-log {
+            height: 300px;
             overflow-y: auto;
+            background: #212529;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
         }
-
-        .template-display {
-            width: 100%;
-            height: 200px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin: 15px 0;
-            overflow: hidden;
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .notification.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .notification-success {
+            background: var(--success);
+        }
+        
+        .notification-error {
+            background: var(--danger);
+        }
+        
+        .fingerprint-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-fingerprint fa-beat"></i> ZK4500 Fingerprint Scanner</h1>
-            <p>Hiển thị vân tay trực tiếp với animation thực tế</p>
+            <h1><i class="fas fa-fingerprint"></i> ZK4500 Fingerprint Test - Java Web App</h1>
+            <p>Ứng dụng Java chạy trên Tomcat với WebSocket real-time</p>
         </div>
-
-        <div class="status-alert">
-            <div id="connectionStatus">
-                <i class="fas fa-spinner fa-spin"></i> Đang chờ kết nối ZK4500...
-            </div>
-        </div>
-
+        
         <div class="dashboard">
-            <!-- Left Column: Fingerprint Visualization -->
+            <!-- Left Column -->
             <div>
                 <div class="card">
-                    <h2><i class="fas fa-eye"></i> Hiển thị vân tay trực tiếp</h2>
+                    <h3><i class="fas fa-plug"></i> Kết nối ZK4500</h3>
                     
-                    <div class="fingerprint-visualization">
-                        <div class="fingerprint-canvas-container">
-                            <canvas id="fingerprintCanvas"></canvas>
-                            <div class="fingerprint-pattern"></div>
-                            <div class="fingerprint-dots" id="fingerprintDots"></div>
-                            <div class="scanner-animation" id="scannerAnimation"></div>
-                        </div>
-                        
-                        <div class="fingerprint-overlay" id="waitingOverlay">
-                            <i class="fas fa-fingerprint" style="font-size: 4rem; margin-bottom: 20px;"></i>
-                            <h3>ĐỢI QUÉT VÂN TAY</h3>
-                            <p>Đặt ngón tay lên máy quét ZK4500</p>
-                        </div>
+                    <div id="connectionStatus" class="status-box status-disconnected">
+                        <i class="fas fa-times-circle"></i> Chưa kết nối
                     </div>
-
-                    <div class="fingerprint-info-display">
-                        <div class="info-box">
-                            <div class="label">Chất lượng vân tay</div>
-                            <div class="quality-meter">
-                                <div class="quality-fill" id="qualityMeter"></div>
-                            </div>
-                            <div class="value" id="qualityScore">0%</div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="label">Số điểm vân tay</div>
-                            <div class="value" id="minutiaeCount">0</div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="label">Lần quét hôm nay</div>
-                            <div class="value" id="scanCount">0</div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="label">Thời gian quét</div>
-                            <div class="value" id="scanTime">0s</div>
-                        </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Cổng COM:</label>
+                        <select id="comPort" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                            <option value="">-- Chọn cổng --</option>
+                        </select>
+                        <button onclick="refreshPorts()" class="btn" style="margin-top: 10px; width: 100%;">
+                            <i class="fas fa-sync-alt"></i> Làm mời danh sách cổng
+                        </button>
                     </div>
-
-                    <div class="fingerprint-actions">
-                        <div class="action-btn" onclick="startFingerprintScan()">
-                            <i class="fas fa-play"></i> Bắt đầu quét
-                        </div>
-                        <div class="action-btn" onclick="stopFingerprintScan()">
-                            <i class="fas fa-stop"></i> Dừng quét
-                        </div>
-                        <div class="action-btn" onclick="simulateFingerprint()">
-                            <i class="fas fa-bolt"></i> Giả lập quét
-                        </div>
-                        <div class="action-btn" onclick="clearFingerprint()">
-                            <i class="fas fa-trash"></i> Xóa hiển thị
-                        </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Baud Rate:</label>
+                        <select id="baudRate" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                            <option value="9600">9600</option>
+                            <option value="19200">19200</option>
+                            <option value="38400">38400</option>
+                            <option value="57600">57600</option>
+                            <option value="115200" selected>115200</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button onclick="connect()" class="btn btn-primary">
+                            <i class="fas fa-link"></i> Kết nối
+                        </button>
+                        <button onclick="disconnect()" class="btn btn-danger" disabled id="disconnectBtn">
+                            <i class="fas fa-unlink"></i> Ngắt kết nối
+                        </button>
                     </div>
                 </div>
-
-                <!-- Live Preview -->
+                
                 <div class="card">
-                    <h2><i class="fas fa-video"></i> Xem trước thời gian thực</h2>
-                    <div class="live-preview">
-                        <canvas id="livePreview"></canvas>
-                        <div class="live-preview-overlay" id="previewOverlay">
-                            Chế độ xem trước đang chờ dữ liệu...
+                    <h3><i class="fas fa-fingerprint"></i> Hiển thị vân tay</h3>
+                    
+                    <div class="fingerprint-display">
+                        <canvas id="fingerprintCanvas" class="fingerprint-canvas"></canvas>
+                        <div class="scanner-line" id="scannerLine"></div>
+                        <div class="fingerprint-overlay" id="fingerprintOverlay">
+                            <div style="text-align: center;">
+                                <i class="fas fa-fingerprint" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                                <p>Đặt ngón tay lên máy quét</p>
+                            </div>
                         </div>
+                    </div>
+                    
+                    <div class="fingerprint-info">
+                        <div class="info-item">
+                            <div class="info-label">Chất lượng</div>
+                            <div class="info-value" id="qualityValue">0%</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Điểm đặc trưng</div>
+                            <div class="info-value" id="minutiaeValue">0</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Lần quét</div>
+                            <div class="info-value" id="scanCount">0</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Thời gian</div>
+                            <div class="info-value" id="scanTime">0s</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;">
+                        <button onclick="startScan()" class="btn btn-success">
+                            <i class="fas fa-play"></i> Quét
+                        </button>
+                        <button onclick="enroll()" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Đăng ký
+                        </button>
+                        <button onclick="identify()" class="btn" style="background: var(--warning); color: white;">
+                            <i class="fas fa-search"></i> Nhận dạng
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Right Column: Controls and Logs -->
+            
+            <!-- Right Column -->
             <div>
                 <div class="card">
-                    <h2><i class="fas fa-cogs"></i> Điều khiển ZK4500</h2>
+                    <h3><i class="fas fa-terminal"></i> Lệnh điều khiển</h3>
                     
-                    <div class="connection-panel">
-                        <button class="btn btn-primary" onclick="connectToZK4500()">
-                            <i class="fas fa-plug"></i> Kết nối ZK4500
-                        </button>
-                        
-                        <button class="btn btn-warning" onclick="testConnection()">
-                            <i class="fas fa-bolt"></i> Test kết nối
-                        </button>
-                        
-                        <button class="btn btn-success" onclick="startContinuousScan()">
-                            <i class="fas fa-sync-alt"></i> Quét liên tục
-                        </button>
-                        
-                        <button class="btn" onclick="captureFingerprint()" style="background: var(--info); color: white;">
-                            <i class="fas fa-camera"></i> Chụp vân tay
-                        </button>
-                    </div>
-
-                    <div style="margin-top: 20px;">
-                        <h3><i class="fas fa-sliders-h"></i> Cài đặt hiển thị</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--gray);">Độ sáng:</label>
-                                <input type="range" id="brightnessSlider" min="0" max="100" value="50" 
-                                       style="width: 100%;" onchange="updateBrightness(this.value)">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; color: var(--gray);">Độ tương phản:</label>
-                                <input type="range" id="contrastSlider" min="0" max="100" value="50" 
-                                       style="width: 100%;" onchange="updateContrast(this.value)">
-                            </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Lệnh thủ công:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="manualCommand" 
+                                   placeholder="Nhập lệnh (VER, ENROLL, IDENTIFY...)" 
+                                   style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                            <button onclick="sendCommand()" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Gửi
+                            </button>
                         </div>
                     </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <button onclick="sendCommand('VER')" class="btn">
+                            <i class="fas fa-code"></i> VER
+                        </button>
+                        <button onclick="sendCommand('BEEP')" class="btn">
+                            <i class="fas fa-bell"></i> BEEP
+                        </button>
+                        <button onclick="sendCommand('LED ON')" class="btn">
+                            <i class="fas fa-lightbulb"></i> LED ON
+                        </button>
+                        <button onclick="sendCommand('LED OFF')" class="btn">
+                            <i class="fas fa-lightbulb"></i> LED OFF
+                        </button>
+                        <button onclick="sendCommand('CLEAR')" class="btn">
+                            <i class="fas fa-trash"></i> CLEAR
+                        </button>
+                        <button onclick="sendCommand('GET_INFO')" class="btn">
+                            <i class="fas fa-info"></i> GET_INFO
+                        </button>
+                    </div>
                 </div>
-
+                
                 <div class="card">
-                    <h2><i class="fas fa-list-alt"></i> Nhật ký quét vân tay</h2>
-                    <div class="log-container" id="scanLog">
-                        <div class="log-entry">[System] Sẵn sàng nhận dữ liệu vân tay từ ZK4500</div>
+                    <h3><i class="fas fa-list-alt"></i> Dữ liệu nhận được</h3>
+                    <div class="data-log" id="dataLog">
+                        <!-- Log entries will appear here -->
                     </div>
                     
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn" onclick="clearLog()" style="flex: 1; background: var(--light);">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="clearLog()" class="btn" style="flex: 1; background: #6c757d; color: white;">
                             <i class="fas fa-trash"></i> Xóa log
                         </button>
-                        <button class="btn" onclick="exportLog()" style="flex: 1; background: var(--success); color: white;">
+                        <button onclick="exportLog()" class="btn" style="flex: 1; background: var(--success); color: white;">
                             <i class="fas fa-download"></i> Xuất log
                         </button>
                     </div>
                 </div>
-
-                <!-- Fingerprint Templates -->
+                
                 <div class="card">
-                    <h2><i class="fas fa-database"></i> Mẫu vân tay đã lưu</h2>
-                    <div id="templateList" style="max-height: 200px; overflow-y: auto;">
-                        <div style="text-align: center; padding: 20px; color: var(--gray);">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <p>Chưa có mẫu vân tay nào</p>
+                    <h3><i class="fas fa-chart-bar"></i> Thống kê</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div class="info-label">Thời gian kết nối</div>
+                            <div class="info-value" id="uptime">0s</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Lệnh đã gửi</div>
+                            <div class="info-value" id="commandCount">0</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Phản hồi</div>
+                            <div class="info-value" id="responseCount">0</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Lỗi</div>
+                            <div class="info-value" id="errorCount">0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Fingerprint Details Modal -->
-        <div class="fingerprint-details" id="fingerprintDetails">
-            <div class="details-content">
-                <h2><i class="fas fa-fingerprint"></i> Chi tiết vân tay</h2>
-                <div class="template-display" id="templateDisplay"></div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-                    <div>
-                        <strong>ID:</strong> <span id="detailId">N/A</span>
-                    </div>
-                    <div>
-                        <strong>Thời gian:</strong> <span id="detailTime">N/A</span>
-                    </div>
-                    <div>
-                        <strong>Chất lượng:</strong> <span id="detailQuality">N/A</span>
-                    </div>
-                    <div>
-                        <strong>Kích thước:</strong> <span id="detailSize">N/A</span>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary" onclick="closeDetails()" style="width: 100%;">
-                    <i class="fas fa-times"></i> Đóng
-                </button>
-            </div>
-        </div>
     </div>
-
+    
     <div id="notification" class="notification"></div>
-
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
-        // Main Fingerprint Visualization System
-        class FingerprintVisualizer {
-            constructor() {
-                this.canvas = document.getElementById('fingerprintCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.liveCanvas = document.getElementById('livePreview');
-                this.liveCtx = this.liveCanvas.getContext('2d');
-                this.isScanning = false;
-                this.scanCount = 0;
-                this.minutiaePoints = [];
-                this.currentQuality = 0;
-                this.scanStartTime = null;
-                this.fingerprintData = null;
-                this.isConnected = false;
-                this.port = null;
-                this.reader = null;
-                this.writer = null;
-                
-                this.init();
-            }
-
-            init() {
-                this.setupCanvas();
-                this.generateFingerprintPattern();
-                this.setupEventListeners();
-                this.updateConnectionStatus();
-                this.animate();
-            }
-
-            setupCanvas() {
-                const container = this.canvas.parentElement;
-                this.canvas.width = container.clientWidth;
-                this.canvas.height = container.clientHeight;
-                
-                this.liveCanvas.width = this.liveCanvas.parentElement.clientWidth;
-                this.liveCanvas.height = this.liveCanvas.parentElement.clientHeight;
-                
-                window.addEventListener('resize', () => {
-                    this.canvas.width = container.clientWidth;
-                    this.canvas.height = container.clientHeight;
-                    this.liveCanvas.width = this.liveCanvas.parentElement.clientWidth;
-                    this.liveCanvas.height = this.liveCanvas.parentElement.clientHeight;
-                    this.drawFingerprint();
-                });
-            }
-
-            setupEventListeners() {
-                document.getElementById('waitingOverlay').addEventListener('click', () => {
-                    this.simulateFingerprint();
-                });
-            }
-
-            // Generate realistic fingerprint pattern
-            generateFingerprintPattern() {
-                const dotsContainer = document.getElementById('fingerprintDots');
-                dotsContainer.innerHTML = '';
-                
-                // Create minutiae points (dấu vân tay)
-                for (let i = 0; i < 100; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'fingerprint-dot';
-                    
-                    // Random position
-                    const x = Math.random() * 100;
-                    const y = Math.random() * 100;
-                    
-                    dot.style.left = `${x}%`;
-                    dot.style.top = `${y}%`;
-                    
-                    // Random delay for animation
-                    dot.style.transitionDelay = `${Math.random() * 2}s`;
-                    
-                    dotsContainer.appendChild(dot);
-                    this.minutiaePoints.push({
-                        element: dot,
-                        x, y,
-                        active: false
-                    });
-                }
-            }
-
-            // Connect to ZK4500
-            async connectToZK4500() {
-                try {
-                    this.showNotification('Đang kết nối với ZK4500...', 'warning');
-                    
-                    if (!navigator.serial) {
-                        this.showNotification('Trình duyệt không hỗ trợ Web Serial API', 'error');
-                        return;
-                    }
-
-                    // Request port access
-                    this.port = await navigator.serial.requestPort();
-                    
-                    // Open port with ZK4500 settings
-                    await this.port.open({
-                        baudRate: 115200,
-                        dataBits: 8,
-                        stopBits: 1,
-                        parity: 'none',
-                        flowControl: 'none'
-                    });
-
-                    this.writer = this.port.writable.getWriter();
-                    this.isConnected = true;
-                    
-                    this.showNotification('✅ Đã kết nối với ZK4500!', 'success');
-                    this.updateConnectionStatus();
-                    this.logMessage('Đã kết nối với máy quét vân tay ZK4500');
-                    
-                    // Start listening for data
-                    this.readData();
-                    
-                    // Send initial command
-                    this.sendCommand('VER');
-                    
-                } catch (error) {
-                    this.showNotification(`Lỗi kết nối: ${error.message}`, 'error');
-                    this.logMessage(`Lỗi kết nối: ${error.message}`);
-                }
-            }
-
-            async sendCommand(command) {
-                if (!this.isConnected || !this.writer) return;
-                
-                try {
-                    const encoder = new TextEncoder();
-                    const data = encoder.encode(command + '\r\n');
-                    await this.writer.write(data);
-                    this.logMessage(`Gửi lệnh: ${command}`);
-                } catch (error) {
-                    this.logMessage(`Lỗi gửi lệnh: ${error.message}`);
-                }
-            }
-
-            async readData() {
-                try {
-                    while (this.port.readable) {
-                        this.reader = this.port.readable.getReader();
-                        
-                        try {
-                            while (true) {
-                                const { value, done } = await this.reader.read();
-                                if (done) break;
-                                if (value) {
-                                    this.processFingerprintData(value);
-                                }
-                            }
-                        } finally {
-                            this.reader.releaseLock();
-                        }
-                    }
-                } catch (error) {
-                    this.logMessage(`Lỗi đọc dữ liệu: ${error.message}`);
-                }
-            }
-
-            processFingerprintData(data) {
-                // Convert received data to fingerprint visualization
-                const textDecoder = new TextDecoder();
-                const text = textDecoder.decode(data);
-                
-                if (text.includes('FP') || text.includes('Finger')) {
-                    this.handleFingerprintScan();
-                } else if (text.includes('ACK') || text.includes('OK')) {
-                    this.logMessage('Thiết bị phản hồi: OK');
-                }
-                
-                // Update live preview
-                this.updateLivePreview(data);
-            }
-
-            // Handle fingerprint scan
-            handleFingerprintScan() {
-                if (!this.isScanning) return;
-                
-                this.scanCount++;
-                this.scanStartTime = Date.now();
-                
-                // Generate random fingerprint data
-                this.generateRandomFingerprint();
-                
-                // Update UI
-                document.getElementById('scanCount').textContent = this.scanCount;
-                this.logMessage(`👆 Đã quét vân tay lần thứ ${this.scanCount}`, 'scan');
-                
-                // Show notification
-                this.showNotification(`✅ Đã quét vân tay thành công! (Lần ${this.scanCount})`, 'success');
-                
-                // Hide waiting overlay
-                document.getElementById('waitingOverlay').classList.add('hidden');
-                
-                // Update scanner animation
-                document.getElementById('scannerAnimation').style.animation = 'scan 0.5s linear';
-                
-                // Reset after scan
-                setTimeout(() => {
-                    if (this.isScanning) {
-                        document.getElementById('waitingOverlay').classList.remove('hidden');
-                        document.getElementById('scannerAnimation').style.animation = 'scan 2s linear infinite';
-                    }
-                }, 1000);
-            }
-
-            // Generate realistic fingerprint visualization
-            generateRandomFingerprint() {
-                // Random quality between 70-98%
-                this.currentQuality = 70 + Math.random() * 28;
-                document.getElementById('qualityScore').textContent = 
-                    `${Math.round(this.currentQuality)}%`;
-                document.getElementById('qualityMeter').style.width = `${this.currentQuality}%`;
-                
-                // Random minutiae count
-                const minutiaeCount = 40 + Math.floor(Math.random() * 60);
-                document.getElementById('minutiaeCount').textContent = minutiaeCount;
-                
-                // Scan time
-                const scanTime = (Math.random() * 1 + 0.5).toFixed(1);
-                document.getElementById('scanTime').textContent = `${scanTime}s`;
-                
-                // Activate random minutiae points
-                this.minutiaePoints.forEach(point => {
-                    point.element.classList.remove('active');
-                    if (Math.random() > 0.7) {
-                        setTimeout(() => {
-                            point.element.classList.add('active');
-                        }, Math.random() * 1000);
-                    }
-                });
-                
-                // Draw fingerprint on canvas
-                this.drawFingerprint();
-                
-                // Update live preview
-                this.updateLivePreviewWithFingerprint();
-            }
-
-            drawFingerprint() {
-                const ctx = this.ctx;
-                const width = this.canvas.width;
-                const height = this.canvas.height;
-                
-                // Clear canvas
-                ctx.clearRect(0, 0, width, height);
-                
-                // Draw fingerprint ridges
-                ctx.strokeStyle = 'rgba(67, 97, 238, 0.8)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                
-                // Draw swirling fingerprint pattern
-                for (let i = 0; i < 20; i++) {
-                    const centerX = width / 2;
-                    const centerY = height / 2;
-                    const radius = 50 + i * 8;
-                    
-                    ctx.moveTo(centerX + radius, centerY);
-                    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
-                        const x = centerX + radius * Math.cos(angle + i * 0.3);
-                        const y = centerY + radius * Math.sin(angle + i * 0.3);
-                        
-                        // Add some randomness to make it look like a fingerprint
-                        const noiseX = Math.sin(angle * 3) * 3;
-                        const noiseY = Math.cos(angle * 2) * 3;
-                        
-                        ctx.lineTo(x + noiseX, y + noiseY);
-                    }
-                    ctx.closePath();
-                }
-                ctx.stroke();
-                
-                // Draw minutiae points
-                this.minutiaePoints.forEach(point => {
-                    if (point.element.classList.contains('active')) {
-                        const x = (point.x / 100) * width;
-                        const y = (point.y / 100) * height;
-                        
-                        ctx.fillStyle = '#2ec4b6';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 3, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        // Add glow effect
-                        ctx.shadowColor = '#2ec4b6';
-                        ctx.shadowBlur = 10;
-                        ctx.fill();
-                        ctx.shadowBlur = 0;
-                    }
-                });
-            }
-
-            updateLivePreview(data) {
-                const ctx = this.liveCtx;
-                const width = this.liveCanvas.width;
-                const height = this.liveCanvas.height;
-                
-                // Clear preview
-                ctx.clearRect(0, 0, width, height);
-                
-                // Simulate live fingerprint image
-                ctx.fillStyle = '#333';
-                ctx.fillRect(0, 0, width, height);
-                
-                // Draw fingerprint ridges in preview
-                ctx.strokeStyle = '#666';
-                ctx.lineWidth = 1;
-                
-                for (let i = 0; i < 10; i++) {
-                    const centerX = width / 2;
-                    const centerY = height / 2;
-                    const radius = 20 + i * 5;
-                    
-                    ctx.beginPath();
-                    for (let angle = 0; angle < Math.PI * 2; angle += 0.2) {
-                        const x = centerX + radius * Math.cos(angle + i * 0.5);
-                        const y = centerY + radius * Math.sin(angle + i * 0.5);
-                        ctx.lineTo(x, y);
-                    }
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-                
-                // Hide overlay if scanning
-                if (this.isScanning) {
-                    document.getElementById('previewOverlay').style.display = 'none';
-                }
-            }
-
-            updateLivePreviewWithFingerprint() {
-                const ctx = this.liveCtx;
-                const width = this.liveCanvas.width;
-                const height = this.liveCanvas.height;
-                
-                // Clear and draw enhanced fingerprint
-                ctx.clearRect(0, 0, width, height);
-                
-                // Draw fingerprint background
-                const gradient = ctx.createLinearGradient(0, 0, width, height);
-                gradient.addColorStop(0, '#2c3e50');
-                gradient.addColorStop(1, '#34495e');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, width, height);
-                
-                // Draw detailed fingerprint ridges
-                ctx.strokeStyle = '#ecf0f1';
-                ctx.lineWidth = 1.5;
-                
-                // Create multiple ridge patterns
-                for (let pattern = 0; pattern < 3; pattern++) {
-                    ctx.beginPath();
-                    
-                    for (let i = 0; i < 50; i++) {
-                        const x = (i / 50) * width;
-                        const y = height / 2 + Math.sin(i * 0.3 + pattern) * 30;
-                        
-                        if (i === 0) {
-                            ctx.moveTo(x, y);
-                        } else {
-                            ctx.lineTo(x, y);
-                        }
-                    }
-                    ctx.stroke();
-                }
-                
-                // Add some noise for realism
-                for (let i = 0; i < 100; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
-                    const size = Math.random() * 2;
-                    
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // Start fingerprint scanning
-            startFingerprintScan() {
-                if (!this.isConnected) {
-                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
-                    return;
-                }
-                
-                this.isScanning = true;
-                this.scanStartTime = Date.now();
-                
-                document.getElementById('waitingOverlay').classList.remove('hidden');
-                document.getElementById('scannerAnimation').style.display = 'block';
-                
-                this.showNotification('Bắt đầu quét vân tay... Đặt ngón tay lên máy quét', 'warning');
-                this.logMessage('Bắt đầu quét vân tay...');
-                
-                // Send scan command to ZK4500
-                this.sendCommand('SCAN');
-                
-                // Start continuous reading simulation
-                this.startScanSimulation();
-            }
-
-            stopFingerprintScan() {
-                this.isScanning = false;
-                document.getElementById('scannerAnimation').style.display = 'none';
-                document.getElementById('waitingOverlay').classList.remove('hidden');
-                
-                this.showNotification('Đã dừng quét vân tay', 'info');
-                this.logMessage('Dừng quét vân tay');
-            }
-
-            startScanSimulation() {
-                if (!this.isScanning) return;
-                
-                // Simulate occasional fingerprint scans
-                if (Math.random() > 0.7) {
-                    this.handleFingerprintScan();
-                }
-                
-                // Continue simulation
-                setTimeout(() => this.startScanSimulation(), 1000);
-            }
-
-            // Simulate fingerprint (for testing)
-            simulateFingerprint() {
-                if (!this.isScanning) {
-                    this.isScanning = true;
-                    document.getElementById('scannerAnimation').style.display = 'block';
-                }
-                
-                this.handleFingerprintScan();
-                
-                // Auto stop after simulation
-                setTimeout(() => {
-                    this.isScanning = false;
-                    document.getElementById('scannerAnimation').style.display = 'none';
-                }, 2000);
-            }
-
-            clearFingerprint() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.liveCtx.clearRect(0, 0, this.liveCanvas.width, this.liveCanvas.height);
-                
-                this.minutiaePoints.forEach(point => {
-                    point.element.classList.remove('active');
-                });
-                
-                document.getElementById('waitingOverlay').classList.remove('hidden');
-                document.getElementById('previewOverlay').style.display = 'flex';
-                
-                this.showNotification('Đã xóa hiển thị vân tay', 'info');
-            }
-
-            // Test connection
-            testConnection() {
-                if (!this.isConnected) {
-                    this.showNotification('Chưa kết nối với ZK4500', 'error');
-                    return;
-                }
-                
-                this.sendCommand('TEST');
-                this.showNotification('Đang test kết nối ZK4500...', 'warning');
-                
-                setTimeout(() => {
-                    this.showNotification('✅ Kết nối ZK4500 ổn định!', 'success');
-                }, 1000);
-            }
-
-            startContinuousScan() {
-                if (!this.isConnected) {
-                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
-                    return;
-                }
-                
-                this.isScanning = true;
-                this.showNotification('Bắt đầu quét liên tục...', 'warning');
-                this.logMessage('Bắt đầu chế độ quét liên tục');
-                
-                // Send continuous scan command
-                this.sendCommand('CONTINUOUS_SCAN');
-            }
-
-            captureFingerprint() {
-                if (!this.isConnected) {
-                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
-                    return;
-                }
-                
-                this.showNotification('Đang chụp vân tay...', 'warning');
-                this.sendCommand('CAPTURE');
-                
-                // Simulate capture
-                setTimeout(() => {
-                    this.handleFingerprintScan();
-                    this.showNotification('✅ Đã chụp vân tay thành công!', 'success');
-                }, 1500);
-            }
-
-            updateConnectionStatus() {
-                const statusEl = document.getElementById('connectionStatus');
-                if (this.isConnected) {
-                    statusEl.innerHTML = `
-                        <i class="fas fa-check-circle"></i> 
-                        <span>ĐÃ KẾT NỐI ZK4500 - Sẵn sàng quét vân tay</span>
-                    `;
-                    statusEl.style.color = '#2ec4b6';
-                } else {
-                    statusEl.innerHTML = `
-                        <i class="fas fa-spinner fa-spin"></i> 
-                        <span>Đang chờ kết nối ZK4500...</span>
-                    `;
-                    statusEl.style.color = 'white';
-                }
-            }
-
-            updateBrightness(value) {
-                this.canvas.style.filter = `brightness(${value}%)`;
-                this.liveCanvas.style.filter = `brightness(${value}%)`;
-            }
-
-            updateContrast(value) {
-                const currentBrightness = document.getElementById('brightnessSlider').value;
-                this.canvas.style.filter = `brightness(${currentBrightness}%) contrast(${value}%)`;
-                this.liveCanvas.style.filter = `brightness(${currentBrightness}%) contrast(${value}%)`;
-            }
-
-            logMessage(message, type = 'info') {
-                const logContainer = document.getElementById('scanLog');
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${type}`;
-                
-                const timestamp = new Date().toLocaleTimeString('vi-VN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                
-                entry.textContent = `[${timestamp}] ${message}`;
-                logContainer.appendChild(entry);
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }
-
-            clearLog() {
-                document.getElementById('scanLog').innerHTML = `
-                    <div class="log-entry">[${new Date().toLocaleTimeString('vi-VN')}] Đã xóa nhật ký</div>
-                `;
-            }
-
-            exportLog() {
-                const entries = document.querySelectorAll('.log-entry');
-                let logText = 'NHẬT KÝ QUÉT VÂN TAY ZK4500\n';
-                logText += '='.repeat(50) + '\n\n';
-                
-                entries.forEach(entry => {
-                    logText += entry.textContent + '\n';
-                });
-                
-                const blob = new Blob([logText], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `zk4500-scan-log-${new Date().toISOString().slice(0,10)}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                
-                this.showNotification('Đã xuất nhật ký', 'success');
-            }
-
-            showNotification(message, type = 'info') {
-                const notification = document.getElementById('notification');
-                notification.textContent = message;
-                notification.className = `notification ${type}`;
-                
-                setTimeout(() => notification.classList.add('show'), 10);
-                setTimeout(() => notification.classList.remove('show'), 3000);
-            }
-
-            animate() {
-                // Update scanner animation
-                if (this.isScanning) {
-                    const scanner = document.getElementById('scannerAnimation');
-                    const position = parseFloat(scanner.style.top || '0');
-                    scanner.style.top = `${(position + 2) % 100}%`;
-                }
-                
-                // Continue animation loop
-                requestAnimationFrame(() => this.animate());
-            }
-
-            openFingerprintDetails() {
-                document.getElementById('fingerprintDetails').classList.add('active');
-            }
-
-            closeDetails() {
-                document.getElementById('fingerprintDetails').classList.remove('active');
-            }
-        }
-
-        // Global functions for button clicks
-        let visualizer;
-
-        function connectToZK4500() {
-            if (!visualizer) visualizer = new FingerprintVisualizer();
-            visualizer.connectToZK4500();
-        }
-
-        function startFingerprintScan() {
-            if (!visualizer) visualizer = new FingerprintVisualizer();
-            visualizer.startFingerprintScan();
-        }
-
-        function stopFingerprintScan() {
-            if (visualizer) visualizer.stopFingerprintScan();
-        }
-
-        function simulateFingerprint() {
-            if (!visualizer) visualizer = new FingerprintVisualizer();
-            visualizer.simulateFingerprint();
-        }
-
-        function clearFingerprint() {
-            if (visualizer) visualizer.clearFingerprint();
-        }
-
-        function testConnection() {
-            if (visualizer) visualizer.testConnection();
-        }
-
-        function startContinuousScan() {
-            if (visualizer) visualizer.startContinuousScan();
-        }
-
-        function captureFingerprint() {
-            if (visualizer) visualizer.captureFingerprint();
-        }
-
-        function updateBrightness(value) {
-            if (visualizer) visualizer.updateBrightness(value);
-        }
-
-        function updateContrast(value) {
-            if (visualizer) visualizer.updateContrast(value);
-        }
-
-        function clearLog() {
-            if (visualizer) visualizer.clearLog();
-        }
-
-        function exportLog() {
-            if (visualizer) visualizer.exportLog();
-        }
-
-        function closeDetails() {
-            if (visualizer) visualizer.closeDetails();
-        }
-
-        // Initialize visualizer when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            visualizer = new FingerprintVisualizer();
+        // WebSocket connection
+        let ws = null;
+        let isConnected = false;
+        let canvas = null;
+        let ctx = null;
+        let scanCount = 0;
+        let commandCount = 0;
+        let responseCount = 0;
+        let errorCount = 0;
+        let connectionStart = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup canvas
+            canvas = document.getElementById('fingerprintCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
             
-            // Auto-simulate for demo
-            setTimeout(() => {
-                if (!visualizer.isConnected) {
-                    visualizer.simulateFingerprint();
-                }
-            }, 2000);
+            // Connect WebSocket
+            connectWebSocket();
+            
+            // Load available ports
+            refreshPorts();
+            
+            // Start uptime counter
+            setInterval(updateUptime, 1000);
         });
+        
+        // WebSocket functions
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + window.location.host + '<%= request.getContextPath() %>/ws/zk4500';
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                showNotification('WebSocket connected', 'success');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                showNotification('WebSocket error', 'error');
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                // Try to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+        
+        function handleWebSocketMessage(data) {
+            console.log('WebSocket message:', data);
+            
+            switch(data.type) {
+                case 'connection':
+                    handleConnectionResponse(data);
+                    break;
+                case 'disconnection':
+                    handleDisconnectionResponse(data);
+                    break;
+                case 'command':
+                    handleCommandResponse(data);
+                    break;
+                case 'data':
+                    handleDataResponse(data);
+                    break;
+                case 'portList':
+                    handlePortList(data);
+                    break;
+                case 'status':
+                    handleStatusUpdate(data);
+                    break;
+                case 'error':
+                    handleError(data);
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+        
+        function handleConnectionResponse(data) {
+            if (data.success) {
+                isConnected = true;
+                connectionStart = new Date();
+                updateConnectionStatus(true);
+                showNotification(data.message, 'success');
+                logMessage('Connected: ' + data.message);
+            } else {
+                showNotification(data.message, 'error');
+                logMessage('Connection failed: ' + data.message);
+            }
+        }
+        
+        function handleDisconnectionResponse(data) {
+            isConnected = false;
+            updateConnectionStatus(false);
+            showNotification(data.message, 'success');
+            logMessage('Disconnected');
+        }
+        
+        function handleCommandResponse(data) {
+            commandCount++;
+            document.getElementById('commandCount').textContent = commandCount;
+            
+            if (data.success) {
+                logMessage('Command sent: ' + data.command);
+            } else {
+                errorCount++;
+                document.getElementById('errorCount').textContent = errorCount;
+                logMessage('Failed to send command: ' + data.command);
+            }
+        }
+        
+        function handleDataResponse(data) {
+            responseCount++;
+            document.getElementById('responseCount').textContent = responseCount;
+            
+            if (Array.isArray(data.data)) {
+                data.data.forEach(item => {
+                    logMessage('Received: ' + item);
+                    
+                    // Check for fingerprint data
+                    if (item.includes('Finger') || item.includes('FP') || item.includes('Scan')) {
+                        handleFingerprintData(item);
+                    }
+                });
+            } else {
+                logMessage('Received: ' + data.data);
+            }
+        }
+        
+        function handlePortList(data) {
+            const select = document.getElementById('comPort');
+            select.innerHTML = '<option value="">-- Chọn cổng --</option>';
+            
+            data.ports.forEach(port => {
+                const option = document.createElement('option');
+                option.value = port;
+                option.textContent = port;
+                select.appendChild(option);
+            });
+            
+            if (data.ports.length > 0) {
+                showNotification('Found ' + data.ports.length + ' COM ports', 'success');
+            }
+        }
+        
+        function handleStatusUpdate(data) {
+            isConnected = data.connected;
+            updateConnectionStatus(isConnected);
+            
+            if (isConnected) {
+                document.getElementById('comPort').value = data.port;
+                document.getElementById('baudRate').value = data.baudRate;
+                connectionStart = new Date(data.timestamp);
+            }
+        }
+        
+        function handleError(data) {
+            errorCount++;
+            document.getElementById('errorCount').textContent = errorCount;
+            showNotification(data.message, 'error');
+            logMessage('Error: ' + data.message);
+        }
+        
+        // UI Functions
+        function refreshPorts() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'listPorts' }));
+            }
+        }
+        
+        function connect() {
+            const port = document.getElementById('comPort').value;
+            const baudRate = document.getElementById('baudRate').value;
+            
+            if (!port) {
+                showNotification('Please select a COM port', 'error');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    action: 'connect',
+                    port: port,
+                    baudRate: baudRate
+                }));
+            }
+        }
+        
+        function disconnect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'disconnect' }));
+            }
+        }
+        
+        function sendCommand(cmd) {
+            let command = cmd;
+            if (!cmd) {
+                command = document.getElementById('manualCommand').value;
+                document.getElementById('manualCommand').value = '';
+            }
+            
+            if (!command) {
+                showNotification('Please enter a command', 'error');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN && isConnected) {
+                ws.send(JSON.stringify({
+                    action: 'command',
+                    command: command
+                }));
+            } else {
+                showNotification('Not connected to ZK4500', 'error');
+            }
+        }
+        
+        function startScan() {
+            if (!isConnected) {
+                showNotification('Please connect to ZK4500 first', 'error');
+                return;
+            }
+            
+            document.getElementById('fingerprintOverlay').style.display = 'none';
+            document.getElementById('scannerLine').style.display = 'block';
+            
+            // Start scanning animation
+            setTimeout(() => {
+                simulateFingerprintScan();
+            }, 1000);
+        }
+        
+        function enroll() {
+            if (!isConnected) {
+                showNotification('Please connect to ZK4500 first', 'error');
+                return;
+            }
+            
+            const templateId = prompt('Enter template ID (1-1000):', '1');
+            if (templateId) {
+                sendCommand('ENROLL ' + templateId);
+                showNotification('Starting fingerprint enrollment...', 'success');
+            }
+        }
+        
+        function identify() {
+            if (!isConnected) {
+                showNotification('Please connect to ZK4500 first', 'error');
+                return;
+            }
+            
+            sendCommand('IDENTIFY');
+            showNotification('Starting fingerprint identification...', 'success');
+        }
+        
+        function simulateFingerprintScan() {
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            
+            // Generate random fingerprint data
+            const quality = 70 + Math.floor(Math.random() * 30);
+            const minutiae = 40 + Math.floor(Math.random() * 60);
+            const scanTime = (Math.random() * 0.5 + 0.5).toFixed(1);
+            
+            document.getElementById('qualityValue').textContent = quality + '%';
+            document.getElementById('minutiaeValue').textContent = minutiae;
+            document.getElementById('scanTime').textContent = scanTime + 's';
+            
+            // Draw fingerprint
+            drawFingerprint();
+            
+            // Log the scan
+            logMessage(`Fingerprint scanned: Quality=${quality}%, Minutiae=${minutiae}, Time=${scanTime}s`);
+            showNotification('Fingerprint scanned successfully!', 'success');
+            
+            // Stop scanner after delay
+            setTimeout(() => {
+                document.getElementById('fingerprintOverlay').style.display = 'flex';
+                document.getElementById('scannerLine').style.display = 'none';
+            }, 2000);
+        }
+        
+        function handleFingerprintData(data) {
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            
+            // Parse fingerprint data (simulated)
+            const quality = 80 + Math.floor(Math.random() * 20);
+            const minutiae = 50 + Math.floor(Math.random() * 50);
+            const scanTime = (Math.random() * 0.3 + 0.3).toFixed(1);
+            
+            document.getElementById('qualityValue').textContent = quality + '%';
+            document.getElementById('minutiaeValue').textContent = minutiae;
+            document.getElementById('scanTime').textContent = scanTime + 's';
+            
+            // Draw fingerprint
+            drawFingerprint();
+            
+            logMessage(`Fingerprint data received: ${data}`);
+            showNotification('Fingerprint data received from ZK4500!', 'success');
+        }
+        
+        function drawFingerprint() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw fingerprint pattern
+            ctx.strokeStyle = '#4361ee';
+            ctx.lineWidth = 2;
+            
+            // Draw swirling pattern
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            for (let i = 0; i < 15; i++) {
+                const radius = 30 + i * 8;
+                
+                ctx.beginPath();
+                for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+                    const x = centerX + radius * Math.cos(angle + i * 0.3);
+                    const y = centerY + radius * Math.sin(angle + i * 0.3);
+                    ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+            
+            // Draw minutiae points
+            ctx.fillStyle = '#2ec4b6';
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            if (connected) {
+                statusEl.className = 'status-box status-connected';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Đã kết nối';
+                disconnectBtn.disabled = false;
+            } else {
+                statusEl.className = 'status-box status-disconnected';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Chưa kết nối';
+                disconnectBtn.disabled = true;
+            }
+        }
+        
+        function logMessage(message) {
+            const log = document.getElementById('dataLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString('vi-VN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('dataLog').innerHTML = '';
+            logMessage('Log cleared');
+        }
+        
+        function exportLog() {
+            const log = document.getElementById('dataLog');
+            const entries = log.querySelectorAll('.log-entry');
+            let logText = 'ZK4500 Fingerprint Test Log\n';
+            logText += 'Generated: ' + new Date().toLocaleString('vi-VN') + '\n';
+            logText += '='.repeat(50) + '\n\n';
+            
+            entries.forEach(entry => {
+                logText += entry.textContent + '\n';
+            });
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'zk4500-log.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showNotification('Log exported', 'success');
+        }
+        
+        function updateUptime() {
+            if (connectionStart) {
+                const now = new Date();
+                const diff = Math.floor((now - connectionStart) / 1000);
+                const hours = Math.floor(diff / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                const seconds = diff % 60;
+                
+                let uptime = '';
+                if (hours > 0) uptime += hours + 'h ';
+                if (minutes > 0) uptime += minutes + 'm ';
+                uptime += seconds + 's';
+                
+                document.getElementById('uptime').textContent = uptime;
+            }
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification notification-${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
