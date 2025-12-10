@@ -1,0 +1,15 @@
+{
+  "name": "zk4500-fingerprint-test",
+  "version": "1.0.0",
+  "description": "ZK4500 Fingerprint Scanner Test",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2",
+    "serialport": "^12.0.0"
+  }
+}
