@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 USB Connection Tool</title>
+    <title>ZK4500 HID Connection Tool</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -14,8 +14,8 @@
         }
 
         body {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: #f1f5f9;
+            background: linear-gradient(135deg, #0c0c2e, #1a1a4a);
+            color: #e6e6ff;
             min-height: 100vh;
             padding: 20px;
         }
@@ -30,52 +30,75 @@
             text-align: center;
             margin-bottom: 40px;
             padding: 25px;
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(26, 26, 74, 0.7);
             border-radius: 15px;
-            border: 1px solid rgba(100, 116, 139, 0.3);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(102, 102, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            color: #60a5fa;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            color: #6666ff;
+            text-shadow: 0 0 10px rgba(102, 102, 255, 0.5);
         }
 
         .header p {
             font-size: 1.1rem;
-            color: #cbd5e1;
+            color: #b3b3ff;
         }
 
         .card {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(26, 26, 74, 0.7);
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 30px;
-            border: 1px solid rgba(100, 116, 139, 0.3);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(102, 102, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         .card-title {
             font-size: 1.5rem;
             margin-bottom: 20px;
-            color: #60a5fa;
+            color: #6666ff;
             display: flex;
             align-items: center;
             gap: 10px;
-            border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+            border-bottom: 2px solid rgba(102, 102, 255, 0.3);
             padding-bottom: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(12, 12, 46, 0.8);
+            border-radius: 10px;
         }
 
         .status-indicator {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 10px;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+        }
+
+        .status-dot.disconnected {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
         }
 
         .status-text {
@@ -83,65 +106,44 @@
             font-weight: 600;
         }
 
-        .status-badge {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .status-connected {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-
-        .status-disconnected {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .info-grid {
+        .device-info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
         }
 
-        .info-item {
-            background: rgba(15, 23, 42, 0.5);
+        .info-card {
+            background: rgba(12, 12, 46, 0.8);
             padding: 15px;
             border-radius: 10px;
-            border-left: 4px solid #60a5fa;
+            border-left: 4px solid #6666ff;
         }
 
         .info-label {
             font-size: 0.9rem;
-            color: #94a3b8;
+            color: #9999ff;
             margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .info-value {
             font-size: 1.1rem;
             font-family: 'Courier New', monospace;
-            color: #e2e8f0;
+            color: #ffffff;
             word-break: break-all;
         }
 
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .btn {
-            padding: 14px 28px;
+            padding: 15px 25px;
             border: none;
             border-radius: 10px;
             font-size: 1rem;
@@ -150,42 +152,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             transition: all 0.3s ease;
-            min-width: 200px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #4d4dff, #3333cc);
+            color: white;
+            box-shadow: 0 4px 15px rgba(77, 77, 255, 0.3);
         }
 
         .btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
+            box-shadow: 0 6px 20px rgba(77, 77, 255, 0.4);
+            background: linear-gradient(135deg, #6666ff, #4040ff);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
+            background: linear-gradient(135deg, #00cc66, #00994d);
+            box-shadow: 0 4px 15px rgba(0, 204, 102, 0.3);
         }
 
-        .btn-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
+        .btn-success:hover:not(:disabled) {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            box-shadow: 0 6px 20px rgba(0, 204, 102, 0.4);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #64748b, #475569);
-            color: white;
+        .btn-danger:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff6666, #ff4444);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffaa00, #cc8800);
+            box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ffcc00, #ffaa00);
+            box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
         }
 
         .btn:disabled {
@@ -194,77 +201,94 @@
             transform: none !important;
         }
 
-        .command-input-group {
+        .command-section {
             margin-top: 25px;
         }
 
-        .command-input-group h4 {
-            margin-bottom: 10px;
-            color: #94a3b8;
-        }
-
-        .input-wrapper {
+        .command-input-group {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
 
         .command-input {
             flex: 1;
             padding: 14px;
             border-radius: 10px;
-            border: 2px solid #475569;
-            background: rgba(15, 23, 42, 0.5);
+            border: 2px solid #4d4dff;
+            background: rgba(12, 12, 46, 0.8);
             color: white;
             font-family: 'Courier New', monospace;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .command-input:focus {
             outline: none;
-            border-color: #60a5fa;
+            border-color: #6666ff;
+            box-shadow: 0 0 10px rgba(102, 102, 255, 0.5);
         }
 
         .log-container {
-            height: 350px;
-            overflow-y: auto;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(12, 12, 46, 0.8);
             border-radius: 10px;
             padding: 20px;
-            margin-top: 10px;
-            border: 1px solid rgba(100, 116, 139, 0.3);
+            height: 350px;
+            overflow-y: auto;
+            border: 1px solid rgba(102, 102, 255, 0.2);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(102, 102, 255, 0.3);
         }
 
         .log-entry {
             margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(26, 26, 74, 0.5);
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
             line-height: 1.4;
+            border-left: 3px solid #6666ff;
         }
 
         .log-time {
-            color: #60a5fa;
-            margin-right: 15px;
+            color: #9999ff;
             font-weight: 600;
+            margin-right: 15px;
         }
 
-        .log-info { color: #60a5fa; }
-        .log-success { color: #10b981; }
-        .log-warning { color: #f59e0b; }
-        .log-error { color: #ef4444; }
-        .log-data { color: #cbd5e1; }
+        .log-data {
+            color: #00ff88;
+        }
 
-        .notification {
+        .log-info {
+            color: #6666ff;
+        }
+
+        .log-warning {
+            color: #ffaa00;
+        }
+
+        .log-error {
+            color: #ff4444;
+        }
+
+        .message-box {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 18px 25px;
+            padding: 15px 25px;
             border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            background: rgba(26, 26, 74, 0.95);
+            border: 1px solid #6666ff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 1000;
             display: none;
             animation: slideIn 0.3s ease;
@@ -283,103 +307,67 @@
             }
         }
 
-        .notification.success {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
-            border-left: 5px solid #10b981;
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
         }
 
-        .notification.error {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
-            border-left: 5px solid #ef4444;
+        .message-box.success {
+            border-left: 5px solid #00ff88;
         }
 
-        .notification.warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
-            border-left: 5px solid #f59e0b;
+        .message-box.error {
+            border-left: 5px solid #ff4444;
         }
 
-        .notification.info {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(29, 78, 216, 0.9));
-            border-left: 5px solid #3b82f6;
+        .message-box.warning {
+            border-left: 5px solid #ffaa00;
         }
 
-        .driver-help {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .driver-help h4 {
-            color: #f59e0b;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .message-box.info {
+            border-left: 5px solid #6666ff;
         }
 
         .footer {
             text-align: center;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid rgba(100, 116, 139, 0.3);
-            color: #94a3b8;
+            border-top: 1px solid rgba(102, 102, 255, 0.3);
+            color: #9999ff;
             font-size: 0.9rem;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
+        .hid-info {
+            background: rgba(102, 102, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(102, 102, 255, 0.3);
         }
 
-        .modal-content {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            border: 1px solid #475569;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-title {
-            color: #60a5fa;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .modal-actions {
+        .hid-info h4 {
+            color: #9999ff;
+            margin-bottom: 10px;
             display: flex;
-            gap: 15px;
-            margin-top: 25px;
-            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
         }
 
         @media (max-width: 768px) {
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .info-grid {
+            .control-panel {
                 grid-template-columns: 1fr;
             }
             
-            .input-wrapper {
+            .command-input-group {
                 flex-direction: column;
+            }
+            
+            .device-info-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -387,129 +375,108 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-microchip"></i> ZK4500 USB CONNECTION TOOL</h1>
-            <p>Advanced WebUSB Interface for ZK4500 Device</p>
-            <p style="margin-top: 10px; font-size: 0.9rem; background: rgba(96, 165, 250, 0.1); padding: 8px 15px; border-radius: 20px; display: inline-block;">
-                VID: 0x1B55 | PID: 0x0840
-            </p>
+            <h1><i class="fas fa-gamepad"></i> ZK4500 HID CONNECTION TOOL</h1>
+            <p>Connect to ZK4500 using WebHID API - No Driver Required!</p>
+            <div style="margin-top: 15px; padding: 10px; background: rgba(102, 102, 255, 0.1); border-radius: 10px; display: inline-block;">
+                <i class="fas fa-info-circle"></i> VID: 0x1B55 | PID: 0x0840 | Protocol: HID
+            </div>
         </div>
 
         <!-- Status Card -->
         <div class="card">
             <div class="card-title">
-                <i class="fas fa-plug"></i> CONNECTION STATUS
+                <i class="fas fa-plug"></i> DEVICE STATUS
             </div>
             
-            <div class="status-indicator">
-                <div class="status-text">
-                    <i class="fas fa-satellite-dish"></i> Device Status
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div id="statusDot" class="status-dot disconnected"></div>
+                    <div id="statusText" class="status-text">DISCONNECTED</div>
                 </div>
-                <div id="connectionStatus" class="status-badge status-disconnected">
-                    <i class="fas fa-times-circle"></i> DISCONNECTED
+                <div id="deviceName" style="color: #9999ff; font-family: 'Courier New', monospace;">
+                    No device connected
                 </div>
             </div>
             
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Manufacturer</div>
-                    <div id="deviceManufacturer" class="info-value">-</div>
+            <div class="device-info-grid">
+                <div class="info-card">
+                    <div class="info-label">Product ID</div>
+                    <div id="infoPID" class="info-value">-</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Product Name</div>
-                    <div id="deviceProduct" class="info-value">-</div>
+                <div class="info-card">
+                    <div class="info-label">Vendor ID</div>
+                    <div id="infoVID" class="info-value">-</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Serial Number</div>
-                    <div id="deviceSerial" class="info-value">-</div>
+                <div class="info-card">
+                    <div class="info-label">Usage Page</div>
+                    <div id="infoUsagePage" class="info-value">-</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">USB Version</div>
-                    <div id="deviceVersion" class="info-value">-</div>
+                <div class="info-card">
+                    <div class="info-label">Usage</div>
+                    <div id="infoUsage" class="info-value">-</div>
                 </div>
             </div>
         </div>
 
-        <!-- Connection Card -->
+        <!-- Control Card -->
         <div class="card">
             <div class="card-title">
-                <i class="fas fa-link"></i> CONNECTION CONTROLS
+                <i class="fas fa-sliders-h"></i> DEVICE CONTROLS
             </div>
             
-            <div class="button-group">
-                <button id="connectBtn" class="btn btn-primary">
-                    <i class="fas fa-link"></i> CONNECT DEVICE
+            <div class="control-panel">
+                <button id="connectBtn" class="btn">
+                    <i class="fas fa-link"></i> CONNECT HID
                 </button>
                 <button id="disconnectBtn" class="btn btn-danger" disabled>
                     <i class="fas fa-unlink"></i> DISCONNECT
                 </button>
-                <button id="installDriverBtn" class="btn btn-warning">
-                    <i class="fas fa-download"></i> INSTALL WINUSB DRIVER
+                <button id="sendReportBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-paper-plane"></i> SEND REPORT
+                </button>
+                <button id="readReportBtn" class="btn btn-warning" disabled>
+                    <i class="fas fa-download"></i> READ REPORT
                 </button>
             </div>
             
-            <div class="driver-help">
-                <h4><i class="fas fa-exclamation-triangle"></i> ACCESS DENIED FIX</h4>
-                <p>If you get "Access denied" error:</p>
-                <ol style="margin: 10px 0 10px 20px; color: #cbd5e1;">
-                    <li>Click "Install WinUSB Driver" button</li>
-                    <li>Follow Zadig instructions to install WinUSB driver</li>
-                    <li>Disconnect and reconnect the device</li>
-                    <li>Try connecting again</li>
-                </ol>
-                <p style="font-size: 0.9rem; color: #94a3b8;">
-                    <i class="fas fa-info-circle"></i> Windows may be using a default driver that blocks WebUSB access.
-                </p>
-            </div>
-        </div>
-
-        <!-- Communication Card -->
-        <div class="card">
-            <div class="card-title">
-                <i class="fas fa-broadcast-tower"></i> DEVICE COMMUNICATION
-            </div>
-            
-            <div class="button-group">
-                <button id="sendTestBtn" class="btn btn-success" disabled>
-                    <i class="fas fa-paper-plane"></i> SEND TEST COMMAND
-                </button>
-                <button id="readDataBtn" class="btn btn-primary" disabled>
-                    <i class="fas fa-download"></i> READ DATA
-                </button>
-                <button id="toggleStreamBtn" class="btn btn-secondary" disabled>
-                    <i class="fas fa-play"></i> START STREAMING
-                </button>
-            </div>
-            
-            <div class="command-input-group">
-                <h4><i class="fas fa-terminal"></i> CUSTOM COMMAND (HEX)</h4>
-                <div class="input-wrapper">
-                    <input type="text" id="commandInput" placeholder="Example: 01 0A FF 00 or 010AFF00" 
+            <div class="command-section">
+                <div class="card-title">
+                    <i class="fas fa-terminal"></i> HID COMMUNICATION
+                </div>
+                
+                <div class="command-input-group">
+                    <input type="text" id="reportInput" placeholder="Enter report data (hex, e.g., 01 02 03)" 
                            class="command-input">
-                    <button id="sendCommandBtn" class="btn btn-success" disabled>
+                    <button id="sendCustomBtn" class="btn btn-success" disabled>
                         <i class="fas fa-play"></i> SEND
                     </button>
                 </div>
-                <small style="display: block; margin-top: 8px; color: #94a3b8;">
-                    <i class="fas fa-keyboard"></i> Press Ctrl+Enter to send | Hex values (00-FF)
-                </small>
+                
+                <div class="hid-info">
+                    <h4><i class="fas fa-lightbulb"></i> HID MODE INFORMATION</h4>
+                    <p>ZK4500 is in <strong>HID Mode</strong>. WebHID API can access it directly without drivers.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem;">
+                        <i class="fas fa-check-circle"></i> No driver installation needed<br>
+                        <i class="fas fa-check-circle"></i> Direct operating system access<br>
+                        <i class="fas fa-check-circle"></i> Real-time communication
+                    </p>
+                </div>
             </div>
         </div>
 
         <!-- Log Card -->
         <div class="card">
             <div class="card-title">
-                <i class="fas fa-terminal"></i> COMMUNICATION LOG
+                <i class="fas fa-history"></i> COMMUNICATION LOG
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="color: #94a3b8;">
-                    <i class="fas fa-history"></i> Log Entries: <span id="logCount">0</span>
+            <div class="log-header">
+                <div style="color: #9999ff;">
+                    <i class="fas fa-list"></i> Total Entries: <span id="logCount">0</span>
                 </div>
-                <div>
-                    <button id="clearLogBtn" class="btn btn-warning" style="min-width: auto; padding: 10px 20px;">
-                        <i class="fas fa-trash-alt"></i> CLEAR LOG
-                    </button>
-                </div>
+                <button id="clearLogBtn" class="btn btn-warning" style="padding: 8px 16px;">
+                    <i class="fas fa-trash"></i> CLEAR
+                </button>
             </div>
             
             <div id="logContent" class="log-container">
@@ -517,81 +484,43 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
-            <p>ZK4500 WebUSB Interface v2.0 | Chrome/Edge 79+ Required | HTTPS/Localhost Only</p>
+            <p><i class="fas fa-code"></i> ZK4500 WebHID Interface v1.0 | Chrome/Edge 89+ Required</p>
             <p style="margin-top: 5px; font-size: 0.8rem;">
-                <i class="fas fa-shield-alt"></i> Driver Issues? Use Zadig to install WinUSB driver
+                <i class="fas fa-shield-alt"></i> HID Mode requires no additional drivers
             </p>
         </div>
     </div>
 
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
-
-    <!-- Driver Installation Modal -->
-    <div id="driverModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-title">
-                <i class="fas fa-tools"></i> WINUSB DRIVER INSTALLATION
-            </div>
-            <p style="color: #cbd5e1; line-height: 1.6; margin-bottom: 15px;">
-                To fix "Access denied" errors, you need to install the WinUSB driver using Zadig:
-            </p>
-            <ol style="color: #cbd5e1; margin-bottom: 20px; padding-left: 20px; line-height: 1.8;">
-                <li>Download <a href="https://zadig.akeo.ie/" target="_blank" style="color: #60a5fa;">Zadig</a></li>
-                <li>Run Zadig as Administrator</li>
-                <li>Select ZK4500 from the device list</li>
-                <li>Choose <strong>WinUSB</strong> from the driver dropdown</li>
-                <li>Click "Replace Driver"</li>
-                <li>Disconnect and reconnect ZK4500</li>
-                <li>Try connecting again in this tool</li>
-            </ol>
-            <div class="modal-actions">
-                <button id="closeModalBtn" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> CLOSE
-                </button>
-                <button id="downloadZadigBtn" class="btn btn-primary">
-                    <i class="fas fa-external-link-alt"></i> OPEN ZADIG WEBSITE
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box"></div>
 
     <script>
         // Global variables
         let device = null;
         let isConnected = false;
-        let isStreaming = false;
         let logEntries = [];
         const VID = 0x1B55;
         const PID = 0x0840;
-        
-        // Interface detection
-        let useInterface0 = true; // Try interface 0 first
-        let claimedInterface = null;
 
         // DOM Elements
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
-        const installDriverBtn = document.getElementById('installDriverBtn');
-        const sendTestBtn = document.getElementById('sendTestBtn');
-        const readDataBtn = document.getElementById('readDataBtn');
-        const toggleStreamBtn = document.getElementById('toggleStreamBtn');
+        const sendReportBtn = document.getElementById('sendReportBtn');
+        const readReportBtn = document.getElementById('readReportBtn');
+        const sendCustomBtn = document.getElementById('sendCustomBtn');
         const clearLogBtn = document.getElementById('clearLogBtn');
-        const sendCommandBtn = document.getElementById('sendCommandBtn');
-        const commandInput = document.getElementById('commandInput');
-        const connectionStatus = document.getElementById('connectionStatus');
-        const deviceManufacturer = document.getElementById('deviceManufacturer');
-        const deviceProduct = document.getElementById('deviceProduct');
-        const deviceSerial = document.getElementById('deviceSerial');
-        const deviceVersion = document.getElementById('deviceVersion');
+        const reportInput = document.getElementById('reportInput');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const deviceName = document.getElementById('deviceName');
+        const infoPID = document.getElementById('infoPID');
+        const infoVID = document.getElementById('infoVID');
+        const infoUsagePage = document.getElementById('infoUsagePage');
+        const infoUsage = document.getElementById('infoUsage');
         const logContent = document.getElementById('logContent');
         const logCount = document.getElementById('logCount');
-        const notification = document.getElementById('notification');
-        const driverModal = document.getElementById('driverModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const downloadZadigBtn = document.getElementById('downloadZadigBtn');
+        const messageBox = document.getElementById('messageBox');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', init);
@@ -600,446 +529,224 @@
             logMessage('System initialized', 'info');
             logMessage(`Target device: VID=0x${VID.toString(16).toUpperCase()}, PID=0x${PID.toString(16).toUpperCase()}`, 'info');
             
-            // Check WebUSB support
-            if (!('usb' in navigator)) {
-                showNotification('WebUSB is not supported in this browser', 'error');
-                logMessage('ERROR: WebUSB API not available. Use Chrome/Edge 79+.', 'error');
+            // Check WebHID support
+            if (!('hid' in navigator)) {
+                showMessage('WebHID is not supported in this browser', 'error');
+                logMessage('ERROR: WebHID API not available. Use Chrome/Edge 89+.', 'error');
                 disableAllControls();
                 return;
             }
             
-            logMessage('WebUSB API is available', 'success');
-            
-            // Check if page is served over HTTPS/localhost
-            if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                logMessage('WARNING: WebUSB requires HTTPS or localhost. Some features may not work.', 'warning');
-            }
+            logMessage('WebHID API is available', 'success');
             
             // Setup event listeners
             connectBtn.addEventListener('click', connectDevice);
             disconnectBtn.addEventListener('click', disconnectDevice);
-            installDriverBtn.addEventListener('click', () => driverModal.style.display = 'flex');
-            sendTestBtn.addEventListener('click', sendTestCommand);
-            readDataBtn.addEventListener('click', readDeviceData);
-            toggleStreamBtn.addEventListener('click', toggleStreaming);
+            sendReportBtn.addEventListener('click', sendHIDReport);
+            readReportBtn.addEventListener('click', readHIDReport);
+            sendCustomBtn.addEventListener('click', sendCustomReport);
             clearLogBtn.addEventListener('click', clearLog);
-            sendCommandBtn.addEventListener('click', sendCustomCommand);
-            closeModalBtn.addEventListener('click', () => driverModal.style.display = 'none');
-            downloadZadigBtn.addEventListener('click', () => window.open('https://zadig.akeo.ie/', '_blank'));
             
-            // Keyboard shortcuts
-            commandInput.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    sendCommandBtn.click();
+            // Keyboard shortcut
+            reportInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendCustomBtn.click();
                 }
             });
             
-            // Auto-attempt reconnection
-            tryReconnect();
-        }
-
-        // Try to reconnect to previously connected device
-        async function tryReconnect() {
+            // Check for already connected devices
             try {
-                const devices = await navigator.usb.getDevices();
+                const devices = await navigator.hid.getDevices();
                 if (devices.length > 0) {
-                    device = devices.find(d => d.vendorId === VID && d.productId === PID);
+                    device = devices.find(d => 
+                        d.vendorId === VID && d.productId === PID
+                    );
                     if (device) {
-                        logMessage('Found previously paired device, attempting to reconnect...', 'info');
+                        logMessage('Found previously connected device', 'info');
                         await connectToDevice(device);
                     }
                 }
             } catch (error) {
-                logMessage(`Auto-reconnect failed: ${error.message}`, 'warning');
+                logMessage(`Device scan error: ${error.message}`, 'warning');
             }
         }
 
-        // Connect to device
+        // Connect to HID device
         async function connectDevice() {
             try {
-                logMessage('Requesting device connection...', 'info');
+                logMessage('Requesting HID device connection...', 'info');
                 
-                // Request device with our VID/PID filter
-                device = await navigator.usb.requestDevice({
-                    filters: [{ vendorId: VID, productId: PID }]
+                // Request HID device with our VID/PID filter
+                const devices = await navigator.hid.requestDevice({
+                    filters: [
+                        { vendorId: VID, productId: PID },
+                        // Fallback: try any HID device if exact match fails
+                        { vendorId: VID }
+                    ]
                 });
                 
+                if (devices.length === 0) {
+                    showMessage('No HID device selected', 'warning');
+                    return;
+                }
+                
+                device = devices[0];
                 await connectToDevice(device);
                 
             } catch (error) {
                 if (error.name === 'NotFoundError') {
-                    showNotification('Device not found. Make sure ZK4500 is connected.', 'error');
-                    logMessage('Device selection cancelled or not found', 'warning');
+                    showMessage('No HID device found', 'error');
+                    logMessage('No HID device found or user cancelled', 'warning');
                 } else {
-                    showNotification(`Connection error: ${error.message}`, 'error');
+                    showMessage(`Connection error: ${error.message}`, 'error');
                     logMessage(`Connection error: ${error.message}`, 'error');
                 }
             }
         }
 
-        // Connect to a specific device with retry logic
-        async function connectToDevice(selectedDevice) {
+        // Connect to a specific HID device
+        async function connectToDevice(hidDevice) {
             try {
-                showNotification('Connecting to device...', 'info');
-                logMessage(`Attempting to connect to: ${selectedDevice.productName || 'Unknown'}`, 'info');
+                showMessage('Connecting to HID device...', 'info');
+                logMessage(`Connecting to: ${hidDevice.productName || 'Unknown HID Device'}`, 'info');
                 
-                // Try to open the device
-                await selectedDevice.open();
-                logMessage('Device opened successfully', 'success');
+                // Open the HID device
+                await hidDevice.open();
                 
-                // Select configuration if needed
-                if (selectedDevice.configuration === null) {
-                    await selectedDevice.selectConfiguration(1);
-                    logMessage('Selected configuration 1', 'info');
-                }
-                
-                // Try different interfaces
-                const interfaceSuccess = await claimInterface(selectedDevice);
-                
-                if (!interfaceSuccess) {
-                    throw new Error('Failed to claim any USB interface');
-                }
-                
-                device = selectedDevice;
+                device = hidDevice;
                 isConnected = true;
                 
                 updateConnectionStatus(true);
                 updateDeviceInfo();
                 
-                showNotification('Device connected successfully!', 'success');
-                logMessage('Device fully initialized and ready', 'success');
+                // Setup input report event listener
+                device.addEventListener('inputreport', handleInputReport);
+                
+                showMessage('HID device connected successfully!', 'success');
+                logMessage('HID device opened and ready', 'success');
                 
                 // Test communication
-                await testCommunication();
+                await testHIDCommunication();
                 
             } catch (error) {
+                showMessage(`Failed to connect: ${error.message}`, 'error');
                 logMessage(`Connection failed: ${error.message}`, 'error');
-                
-                if (error.message.includes('Access denied')) {
-                    showNotification('Access denied. Try installing WinUSB driver.', 'error');
-                    driverModal.style.display = 'flex';
-                } else {
-                    showNotification(`Connection failed: ${error.message}`, 'error');
-                }
-                
                 isConnected = false;
                 updateConnectionStatus(false);
-                
-                // Try alternative approach
-                if (error.message.includes('Access denied') || error.message.includes('busy')) {
-                    logMessage('Attempting alternative connection method...', 'warning');
-                    await tryAlternativeConnection(selectedDevice);
-                }
             }
         }
 
-        // Try to claim USB interface
-        async function claimInterface(selectedDevice) {
-            // Try interface 0 first
-            try {
-                await selectedDevice.claimInterface(0);
-                claimedInterface = 0;
-                logMessage(`Successfully claimed interface 0`, 'success');
-                return true;
-            } catch (error) {
-                logMessage(`Failed to claim interface 0: ${error.message}`, 'warning');
-            }
+        // Handle input reports from device
+        function handleInputReport(event) {
+            const { data, device, reportId } = event;
+            const bytes = new Uint8Array(data.buffer);
             
-            // Try other interfaces
-            for (let i = 1; i < selectedDevice.configuration.interfaces.length; i++) {
-                try {
-                    await selectedDevice.claimInterface(i);
-                    claimedInterface = i;
-                    logMessage(`Successfully claimed interface ${i}`, 'success');
-                    return true;
-                } catch (error) {
-                    logMessage(`Failed to claim interface ${i}: ${error.message}`, 'warning');
-                }
-            }
+            logMessage(`Input Report ID ${reportId}: ${arrayToHex(bytes)}`, 'data');
             
-            return false;
-        }
-
-        // Alternative connection method
-        async function tryAlternativeConnection(selectedDevice) {
-            try {
-                // Try without claiming interface
-                logMessage('Trying minimal connection (no interface claim)...', 'info');
-                
-                if (!selectedDevice.opened) {
-                    await selectedDevice.open();
-                }
-                
-                // Just open, don't claim interface
-                device = selectedDevice;
-                isConnected = true;
-                
-                updateConnectionStatus(true);
-                updateDeviceInfo();
-                
-                showNotification('Connected in minimal mode', 'warning');
-                logMessage('Connected in minimal mode (no interface claimed)', 'warning');
-                
-            } catch (error) {
-                logMessage(`Alternative connection also failed: ${error.message}`, 'error');
+            // Show notification for important reports
+            if (bytes.length > 0) {
+                showMessage(`Received ${bytes.length} bytes from device`, 'info');
             }
         }
 
-        // Test basic communication
-        async function testCommunication() {
+        // Test HID communication
+        async function testHIDCommunication() {
             if (!device || !isConnected) return;
             
             try {
-                // Try to get device descriptor
-                const controlTransferResult = await device.controlTransferIn({
-                    requestType: 'standard',
-                    recipient: 'device',
-                    request: 0x06, // GET_DESCRIPTOR
-                    value: 0x0100, // DEVICE descriptor
-                    index: 0x0000
-                }, 18);
-                
-                if (controlTransferResult.status === 'ok') {
-                    logMessage('Control transfer test successful', 'success');
-                }
-            } catch (error) {
-                logMessage(`Control transfer test failed: ${error.message}`, 'warning');
-            }
-        }
-
-        // Disconnect device
-        async function disconnectDevice() {
-            if (!device || !isConnected) return;
-            
-            try {
-                if (isStreaming) {
-                    await toggleStreaming();
+                // Try to get feature report (if supported)
+                const collections = device.collections;
+                if (collections && collections.length > 0) {
+                    logMessage(`Device has ${collections.length} HID collection(s)`, 'info');
+                    
+                    // Log collection details
+                    collections.forEach((collection, index) => {
+                        logMessage(`Collection ${index}: Usage Page=0x${collection.usagePage.toString(16)}, Usage=0x${collection.usage.toString(16)}`, 'info');
+                    });
                 }
                 
-                // Release interface if claimed
-                if (claimedInterface !== null) {
-                    await device.releaseInterface(claimedInterface);
-                    claimedInterface = null;
+                // Try to send a simple report if output reports are supported
+                const hasOutputReports = device.collections?.some(c => 
+                    c.outputReports && c.outputReports.length > 0
+                );
+                
+                if (hasOutputReports) {
+                    logMessage('Device supports output reports', 'success');
                 }
                 
-                await device.close();
-                showNotification('Device disconnected', 'info');
-                logMessage('Device disconnected', 'info');
             } catch (error) {
-                logMessage(`Error during disconnect: ${error.message}`, 'warning');
-            }
-            
-            device = null;
-            isConnected = false;
-            updateConnectionStatus(false);
-            clearDeviceInfo();
-        }
-
-        // Update connection status UI
-        function updateConnectionStatus(connected) {
-            isConnected = connected;
-            
-            if (connected) {
-                connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> CONNECTED';
-                connectionStatus.className = 'status-badge status-connected';
-                connectBtn.disabled = true;
-                disconnectBtn.disabled = false;
-                sendTestBtn.disabled = false;
-                readDataBtn.disabled = false;
-                toggleStreamBtn.disabled = false;
-                sendCommandBtn.disabled = false;
-                toggleStreamBtn.innerHTML = '<i class="fas fa-play"></i> START STREAMING';
-            } else {
-                connectionStatus.innerHTML = '<i class="fas fa-times-circle"></i> DISCONNECTED';
-                connectionStatus.className = 'status-badge status-disconnected';
-                connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
-                sendTestBtn.disabled = true;
-                readDataBtn.disabled = true;
-                toggleStreamBtn.disabled = true;
-                sendCommandBtn.disabled = true;
-                isStreaming = false;
+                logMessage(`HID test error: ${error.message}`, 'warning');
             }
         }
 
-        // Update device information
-        async function updateDeviceInfo() {
-            if (!device) return;
-            
-            try {
-                deviceManufacturer.textContent = device.manufacturerName || 'Unknown';
-                deviceProduct.textContent = device.productName || 'Unknown';
-                deviceSerial.textContent = device.serialNumber || 'N/A';
-                deviceVersion.textContent = `USB ${device.usbVersionMajor}.${device.usbVersionMinor}`;
-                
-                logMessage('Device information updated', 'info');
-                
-            } catch (error) {
-                logMessage(`Failed to update device info: ${error.message}`, 'error');
-            }
-        }
-
-        // Clear device info
-        function clearDeviceInfo() {
-            deviceManufacturer.textContent = '-';
-            deviceProduct.textContent = '-';
-            deviceSerial.textContent = '-';
-            deviceVersion.textContent = '-';
-        }
-
-        // Send test command
-        async function sendTestCommand() {
+        // Send HID report
+        async function sendHIDReport() {
             if (!device || !isConnected) {
-                showNotification('Device not connected', 'error');
+                showMessage('Device not connected', 'error');
                 return;
             }
             
             try {
-                // Test packet for ZK4500
-                const testData = new Uint8Array([0x01, 0x03, 0x00, 0x00, 0x00, 0x08, 0x44, 0x0C]);
+                // Create a test report (8 bytes)
+                const reportData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
                 
-                logMessage(`Sending test command: ${arrayToHex(testData)}`, 'info');
+                logMessage(`Sending HID report: ${arrayToHex(reportData)}`, 'info');
                 
-                // Find appropriate endpoint
-                const endpoint = await findEndpoint('out');
+                // Send output report (reportId = 0 for devices without report IDs)
+                await device.sendReport(0, reportData);
                 
-                if (endpoint) {
-                    await device.transferOut(endpoint.endpointNumber, testData);
-                    showNotification('Test command sent successfully', 'success');
-                    logMessage('Test command sent via endpoint ' + endpoint.endpointNumber, 'success');
-                } else {
-                    // Try control transfer as fallback
-                    await device.controlTransferOut({
-                        requestType: 'vendor',
-                        recipient: 'device',
-                        request: 0x01,
-                        value: 0x0000,
-                        index: 0x0000
-                    }, testData);
-                    
-                    showNotification('Test command sent via control transfer', 'warning');
-                    logMessage('Test command sent via control transfer', 'warning');
-                }
+                showMessage('HID report sent successfully', 'success');
+                logMessage('HID report sent', 'success');
                 
             } catch (error) {
-                showNotification(`Failed to send command: ${error.message}`, 'error');
-                logMessage(`Command error: ${error.message}`, 'error');
+                showMessage(`Failed to send report: ${error.message}`, 'error');
+                logMessage(`Report error: ${error.message}`, 'error');
             }
         }
 
-        // Read data from device
-        async function readDeviceData() {
+        // Read HID report
+        async function readHIDReport() {
             if (!device || !isConnected) {
-                showNotification('Device not connected', 'error');
+                showMessage('Device not connected', 'error');
                 return;
             }
             
             try {
-                logMessage('Reading data from device...', 'info');
+                logMessage('Requesting HID feature report...', 'info');
                 
-                // Find appropriate endpoint
-                const endpoint = await findEndpoint('in');
+                // Try to read a feature report
+                const reportData = await device.receiveFeatureReport(0);
+                const bytes = new Uint8Array(reportData.buffer);
                 
-                if (endpoint) {
-                    const result = await device.transferIn(endpoint.endpointNumber, 64);
-                    
-                    if (result.data && result.data.byteLength > 0) {
-                        const data = new Uint8Array(result.data.buffer);
-                        logMessage(`Received ${data.length} bytes: ${arrayToHex(data)}`, 'data');
-                        showNotification(`Received ${data.length} bytes of data`, 'success');
-                    } else {
-                        logMessage('No data received (empty buffer)', 'warning');
-                        showNotification('No data available', 'warning');
-                    }
-                } else {
-                    // Try control transfer
-                    const result = await device.controlTransferIn({
-                        requestType: 'vendor',
-                        recipient: 'device',
-                        request: 0x02,
-                        value: 0x0000,
-                        index: 0x0000
-                    }, 64);
-                    
-                    if (result.data && result.data.byteLength > 0) {
-                        const data = new Uint8Array(result.data.buffer);
-                        logMessage(`Received ${data.length} bytes via control: ${arrayToHex(data)}`, 'data');
-                        showNotification(`Received ${data.length} bytes via control transfer`, 'success');
-                    }
-                }
+                logMessage(`Feature Report: ${arrayToHex(bytes)}`, 'data');
+                showMessage(`Received feature report (${bytes.length} bytes)`, 'success');
                 
             } catch (error) {
-                showNotification(`Read error: ${error.message}`, 'error');
-                logMessage(`Read error: ${error.message}`, 'error');
-            }
-        }
-
-        // Find appropriate endpoint
-        async function findEndpoint(direction) {
-            if (!device || !device.configuration) return null;
-            
-            for (const iface of device.configuration.interfaces) {
-                for (const alt of iface.alternates) {
-                    for (const endpoint of alt.endpoints) {
-                        if (endpoint.direction === direction) {
-                            return endpoint;
-                        }
-                    }
-                }
-            }
-            
-            return null;
-        }
-
-        // Toggle data streaming
-        async function toggleStreaming() {
-            if (!device || !isConnected) return;
-            
-            if (!isStreaming) {
-                // Start streaming
-                isStreaming = true;
-                toggleStreamBtn.innerHTML = '<i class="fas fa-stop"></i> STOP STREAMING';
-                logMessage('Starting data stream...', 'info');
+                // Try input report instead
+                logMessage(`Feature report failed: ${error.message}`, 'warning');
                 
-                // Start polling for data
-                streamData();
-            } else {
-                // Stop streaming
-                isStreaming = false;
-                toggleStreamBtn.innerHTML = '<i class="fas fa-play"></i> START STREAMING';
-                logMessage('Data stream stopped', 'info');
+                // Request an input report by sending a command
+                await device.sendReport(0, new Uint8Array([0x01]));
+                showMessage('Command sent to trigger input report', 'info');
             }
         }
 
-        // Stream data from device
-        async function streamData() {
-            while (isStreaming && device && isConnected) {
-                try {
-                    await readDeviceData();
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second interval
-                } catch (error) {
-                    logMessage(`Stream error: ${error.message}`, 'error');
-                    break;
-                }
-            }
-        }
-
-        // Send custom command
-        async function sendCustomCommand() {
+        // Send custom report
+        async function sendCustomReport() {
             if (!device || !isConnected) {
-                showNotification('Device not connected', 'error');
+                showMessage('Device not connected', 'error');
                 return;
             }
             
-            const commandText = commandInput.value.trim();
-            if (!commandText) {
-                showNotification('Please enter a command', 'warning');
+            const reportText = reportInput.value.trim();
+            if (!reportText) {
+                showMessage('Please enter report data', 'warning');
                 return;
             }
             
             try {
                 // Parse hex string
-                const hexString = commandText.replace(/[^0-9A-Fa-f]/g, '');
+                const hexString = reportText.replace(/[^0-9A-Fa-f]/g, '');
                 if (hexString.length === 0) {
                     throw new Error('No hex values found');
                 }
@@ -1057,37 +764,103 @@
                     bytes.push(byte);
                 }
                 
-                const data = new Uint8Array(bytes);
-                logMessage(`Sending custom command (${data.length} bytes): ${arrayToHex(data)}`, 'info');
+                const reportData = new Uint8Array(bytes);
+                logMessage(`Sending custom report (${reportData.length} bytes): ${arrayToHex(reportData)}`, 'info');
                 
-                // Try bulk transfer first
-                const endpoint = await findEndpoint('out');
+                // Send the report
+                await device.sendReport(0, reportData);
                 
-                if (endpoint) {
-                    await device.transferOut(endpoint.endpointNumber, data);
-                    showNotification(`Command sent (${data.length} bytes)`, 'success');
-                    logMessage('Custom command sent via bulk transfer', 'success');
-                } else {
-                    // Fallback to control transfer
-                    await device.controlTransferOut({
-                        requestType: 'vendor',
-                        recipient: 'device',
-                        request: 0x01,
-                        value: 0x0000,
-                        index: 0x0000
-                    }, data);
-                    
-                    showNotification(`Command sent via control transfer (${data.length} bytes)`, 'warning');
-                    logMessage('Custom command sent via control transfer', 'warning');
-                }
+                showMessage(`Report sent (${reportData.length} bytes)`, 'success');
+                logMessage('Custom report sent successfully', 'success');
                 
-                // Clear input after successful send
-                commandInput.value = '';
+                // Clear input
+                reportInput.value = '';
                 
             } catch (error) {
-                showNotification(`Invalid command: ${error.message}`, 'error');
-                logMessage(`Command parse error: ${error.message}`, 'error');
+                showMessage(`Invalid report data: ${error.message}`, 'error');
+                logMessage(`Report error: ${error.message}`, 'error');
             }
+        }
+
+        // Disconnect device
+        async function disconnectDevice() {
+            if (!device || !isConnected) return;
+            
+            try {
+                // Remove event listener
+                device.removeEventListener('inputreport', handleInputReport);
+                
+                await device.close();
+                showMessage('HID device disconnected', 'info');
+                logMessage('HID device disconnected', 'info');
+            } catch (error) {
+                logMessage(`Disconnect error: ${error.message}`, 'warning');
+            }
+            
+            device = null;
+            isConnected = false;
+            updateConnectionStatus(false);
+            clearDeviceInfo();
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'CONNECTED';
+                statusText.style.color = '#00ff88';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                sendReportBtn.disabled = false;
+                readReportBtn.disabled = false;
+                sendCustomBtn.disabled = false;
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'DISCONNECTED';
+                statusText.style.color = '#ff4444';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                sendReportBtn.disabled = true;
+                readReportBtn.disabled = true;
+                sendCustomBtn.disabled = true;
+            }
+        }
+
+        // Update device information
+        function updateDeviceInfo() {
+            if (!device) return;
+            
+            try {
+                deviceName.textContent = device.productName || 'ZK4500 HID Device';
+                infoPID.textContent = `0x${device.productId.toString(16).toUpperCase()}`;
+                infoVID.textContent = `0x${device.vendorId.toString(16).toUpperCase()}`;
+                
+                // Get HID usage information
+                if (device.collections && device.collections.length > 0) {
+                    const collection = device.collections[0];
+                    infoUsagePage.textContent = `0x${collection.usagePage.toString(16).toUpperCase()}`;
+                    infoUsage.textContent = `0x${collection.usage.toString(16).toUpperCase()}`;
+                } else {
+                    infoUsagePage.textContent = 'Unknown';
+                    infoUsage.textContent = 'Unknown';
+                }
+                
+                logMessage('Device information updated', 'info');
+                
+            } catch (error) {
+                logMessage(`Failed to update device info: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear device info
+        function clearDeviceInfo() {
+            deviceName.textContent = 'No device connected';
+            infoPID.textContent = '-';
+            infoVID.textContent = '-';
+            infoUsagePage.textContent = '-';
+            infoUsage.textContent = '-';
         }
 
         // Logging functions
@@ -1101,7 +874,7 @@
             
             logEntries.push(logEntry);
             
-            // Update log display
+            // Create log element
             const logElement = document.createElement('div');
             logElement.className = 'log-entry';
             
@@ -1124,7 +897,7 @@
             // Update counter
             logCount.textContent = logEntries.length;
             
-            // Keep log size manageable
+            // Limit log size
             if (logEntries.length > 100) {
                 logEntries.shift();
                 if (logContent.firstChild) {
@@ -1140,6 +913,17 @@
             logMessage('Log cleared', 'info');
         }
 
+        // Message display
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+            
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000);
+        }
+
         // Helper functions
         function arrayToHex(array) {
             return Array.from(array)
@@ -1147,34 +931,18 @@
                 .join(' ');
         }
 
-        function showNotification(message, type = 'info') {
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 4000);
-        }
-
         function disableAllControls() {
             connectBtn.disabled = true;
             disconnectBtn.disabled = true;
-            installDriverBtn.disabled = true;
-            sendTestBtn.disabled = true;
-            readDataBtn.disabled = true;
-            toggleStreamBtn.disabled = true;
-            sendCommandBtn.disabled = true;
+            sendReportBtn.disabled = true;
+            readReportBtn.disabled = true;
+            sendCustomBtn.disabled = true;
         }
 
-        // Handle page visibility change
+        // Handle page visibility
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && isStreaming) {
-                logMessage('Page hidden, stopping stream', 'warning');
-                isStreaming = false;
-                if (toggleStreamBtn) {
-                    toggleStreamBtn.innerHTML = '<i class="fas fa-play"></i> START STREAMING';
-                }
+            if (document.hidden && isConnected) {
+                logMessage('Page hidden', 'warning');
             }
         });
     </script>
