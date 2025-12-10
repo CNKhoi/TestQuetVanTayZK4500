@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 Fingerprint Scanner Test</title>
+    <title>ZK4500 Fingerprint Scanner with Live Display</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -14,204 +14,227 @@
         }
 
         body {
-            background: linear-gradient(135deg, #0a1929, #1a365d);
+            background: linear-gradient(135deg, #0c1b33, #1a2b4a);
             color: #ffffff;
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: rgba(26, 54, 93, 0.8);
-            border-radius: 20px;
-            border: 2px solid #4299e1;
-            box-shadow: 0 10px 30px rgba(66, 153, 225, 0.3);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: #90cdf4;
-        }
-
-        .header h1 i {
-            color: #4299e1;
-            margin-right: 15px;
-        }
-
-        .test-panel {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
-            margin-bottom: 30px;
         }
 
-        @media (max-width: 768px) {
-            .test-panel {
+        @media (max-width: 1024px) {
+            .container {
                 grid-template-columns: 1fr;
             }
         }
 
-        .card {
-            background: rgba(26, 54, 93, 0.8);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid #2d3748;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-title {
-            font-size: 1.4rem;
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px;
+            background: rgba(26, 43, 74, 0.9);
+            border-radius: 20px;
             margin-bottom: 20px;
-            color: #90cdf4;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4299e1;
+            border: 2px solid #3a7bd5;
+            box-shadow: 0 10px 30px rgba(58, 123, 213, 0.3);
         }
 
-        /* Connection Status */
-        .connection-status {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #7bc8ff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 i {
+            color: #3a7bd5;
+            margin-right: 15px;
+        }
+
+        /* Scanner Panel */
+        .scanner-panel {
+            background: rgba(26, 43, 74, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid #3a7bd5;
+            box-shadow: 0 10px 30px rgba(58, 123, 213, 0.2);
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 1.6rem;
             margin-bottom: 25px;
-            padding: 20px;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 12px;
-        }
-
-        .status-indicator {
+            color: #7bc8ff;
             display: flex;
             align-items: center;
             gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3a7bd5;
         }
 
-        .status-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #f56565;
-            animation: pulse 2s infinite;
+        .panel-title i {
+            font-size: 1.8rem;
         }
 
-        .status-dot.connected {
-            background: #48bb78;
-            box-shadow: 0 0 15px #48bb78;
+        /* Fingerprint Display Area */
+        .fingerprint-display {
+            position: relative;
+            margin-bottom: 30px;
         }
 
-        .device-info {
-            font-family: 'Courier New', monospace;
-            color: #a0aec0;
-            font-size: 0.9rem;
+        .scanner-frame {
+            width: 100%;
+            height: 400px;
+            background: rgba(12, 27, 51, 0.8);
+            border: 3px solid #3a7bd5;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(58, 123, 213, 0.3);
         }
 
-        /* Scanner Display */
-        .scanner-display {
-            text-align: center;
-            margin-bottom: 25px;
+        #fingerprintCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            image-rendering: pixelated;
+            background: #0a1529;
         }
 
-        .scanner-icon {
-            font-size: 5rem;
-            color: #4299e1;
-            margin-bottom: 15px;
-            animation: scan 3s infinite;
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .scan-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, transparent 49%, rgba(58, 123, 213, 0.1) 50%, transparent 51%),
+                linear-gradient(transparent 49%, rgba(58, 123, 213, 0.1) 50%, transparent 51%);
+            background-size: 20px 20px;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #3a7bd5, #00d2ff, transparent);
+            box-shadow: 0 0 10px #00d2ff;
+            animation: scan 2s linear infinite;
+            z-index: 3;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
         }
 
         .fingerprint-placeholder {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 20px;
-            background: rgba(66, 153, 225, 0.1);
-            border: 3px dashed #4299e1;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #7bc8ff;
+            z-index: 1;
         }
 
-        .fingerprint-pattern {
-            width: 80%;
-            height: 80%;
-            background: 
-                radial-gradient(circle at 30% 30%, #4299e1 2px, transparent 3px),
-                radial-gradient(circle at 70% 30%, #4299e1 2px, transparent 3px),
-                radial-gradient(circle at 50% 50%, #4299e1 2px, transparent 3px),
-                radial-gradient(circle at 30% 70%, #4299e1 2px, transparent 3px),
-                radial-gradient(circle at 70% 70%, #4299e1 2px, transparent 3px);
-            opacity: 0.3;
+        .fingerprint-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: #3a7bd5;
+            opacity: 0.5;
         }
 
-        /* Control Buttons */
-        .control-grid {
+        /* Control Panel */
+        .control-panel {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
         }
 
         .btn {
-            padding: 15px 20px;
+            padding: 16px 24px;
             border: none;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, #4299e1, #3182ce);
+            background: linear-gradient(135deg, #3a7bd5, #2962c9);
             color: white;
-            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+            box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
         }
 
         .btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
-            background: linear-gradient(135deg, #3182ce, #2c5282);
+            box-shadow: 0 6px 20px rgba(58, 123, 213, 0.4);
+            background: linear-gradient(135deg, #2962c9, #1e4a9e);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+            background: linear-gradient(135deg, #00b09b, #00a152);
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.3);
         }
 
         .btn-success:hover:not(:disabled) {
-            background: linear-gradient(135deg, #38a169, #2f855a);
-            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+            background: linear-gradient(135deg, #00a152, #008744);
+            box-shadow: 0 6px 20px rgba(0, 176, 155, 0.4);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
         }
 
         .btn-danger:hover:not(:disabled) {
-            background: linear-gradient(135deg, #e53e3e, #c53030);
-            box-shadow: 0 6px 20px rgba(245, 101, 101, 0.4);
+            background: linear-gradient(135deg, #ff4b2b, #e63e1f);
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
         }
 
         .btn-warning {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3);
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(247, 151, 30, 0.3);
         }
 
         .btn-warning:hover:not(:disabled) {
-            background: linear-gradient(135deg, #dd6b20, #c05621);
-            box-shadow: 0 6px 20px rgba(237, 137, 54, 0.4);
+            background: linear-gradient(135deg, #ffd200, #e6b400);
+            box-shadow: 0 6px 20px rgba(247, 151, 30, 0.4);
         }
 
         .btn:disabled {
@@ -220,118 +243,197 @@
             transform: none !important;
         }
 
-        /* Test Results */
-        .test-results {
+        /* Scanner Info Panel */
+        .scanner-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
             margin-top: 25px;
         }
 
-        .result-item {
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #4299e1;
+        .info-card {
+            background: rgba(12, 27, 51, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #3a7bd5;
         }
 
-        .result-header {
+        .info-label {
+            font-size: 0.9rem;
+            color: #7bc8ff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: rgba(26, 43, 74, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid #00b09b;
+            box-shadow: 0 10px 30px rgba(0, 176, 155, 0.2);
+        }
+
+        /* Fingerprint Details */
+        .fingerprint-details {
+            margin-top: 25px;
+        }
+
+        .detail-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: rgba(12, 27, 51, 0.8);
+            border-radius: 10px;
+            border-left: 4px solid #3a7bd5;
         }
 
-        .result-title {
+        .detail-label {
+            color: #7bc8ff;
             font-weight: 600;
-            color: #90cdf4;
         }
 
-        .result-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-pass {
-            background: rgba(72, 187, 120, 0.2);
-            color: #48bb78;
-            border: 1px solid #48bb78;
-        }
-
-        .status-fail {
-            background: rgba(245, 101, 101, 0.2);
-            color: #f56565;
-            border: 1px solid #f56565;
-        }
-
-        .status-waiting {
-            background: rgba(237, 137, 54, 0.2);
-            color: #ed8936;
-            border: 1px solid #ed8936;
-        }
-
-        .result-details {
+        .detail-value {
+            color: #ffffff;
             font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: #cbd5e0;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+        }
+
+        .quality-bar {
+            width: 200px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
-            overflow-x: auto;
+            overflow: hidden;
+        }
+
+        .quality-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff416c, #f7971e, #00b09b);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        /* Capture Gallery */
+        .capture-gallery {
+            margin-top: 30px;
+        }
+
+        .gallery-title {
+            font-size: 1.4rem;
+            color: #7bc8ff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: rgba(12, 27, 51, 0.8);
+            border: 2px solid #3a7bd5;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            border-color: #00d2ff;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item .index {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
 
         /* Log Panel */
         .log-panel {
             height: 300px;
             overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+            background: rgba(12, 27, 51, 0.8);
+            border-radius: 12px;
             padding: 20px;
-            margin-top: 15px;
-            border: 1px solid #2d3748;
+            margin-top: 25px;
+            border: 1px solid #3a7bd5;
         }
 
         .log-entry {
             margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            background: rgba(26, 54, 93, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(26, 43, 74, 0.5);
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
             line-height: 1.4;
-            border-left: 3px solid #4299e1;
+            border-left: 3px solid #3a7bd5;
         }
 
         .log-time {
-            color: #a0aec0;
+            color: #7bc8ff;
             margin-right: 15px;
             font-weight: 600;
         }
 
-        .log-success { color: #48bb78; }
-        .log-error { color: #f56565; }
-        .log-warning { color: #ed8936; }
-        .log-info { color: #90cdf4; }
-        .log-data { color: #cbd5e0; }
+        .log-success { color: #00b09b; }
+        .log-error { color: #ff416c; }
+        .log-warning { color: #f7971e; }
+        .log-info { color: #7bc8ff; }
+        .log-scan { color: #00d2ff; }
 
         /* Notification */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 18px 25px;
+            padding: 20px 30px;
             border-radius: 12px;
-            background: rgba(26, 54, 93, 0.95);
+            background: rgba(26, 43, 74, 0.95);
             color: white;
             font-weight: 600;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 1000;
             display: none;
             animation: slideIn 0.3s ease;
-            border-left: 5px solid #4299e1;
+            border-left: 5px solid #3a7bd5;
             backdrop-filter: blur(10px);
+            max-width: 400px;
         }
 
         @keyframes slideIn {
@@ -345,6 +447,43 @@
             }
         }
 
+        /* Connection Status */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(12, 27, 51, 0.8);
+            border-radius: 12px;
+            border: 2px solid #3a7bd5;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ff416c;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00b09b;
+            box-shadow: 0 0 15px #00b09b;
+        }
+
+        .device-info {
+            font-family: 'Courier New', monospace;
+            color: #7bc8ff;
+            font-size: 1rem;
+        }
+
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
@@ -354,53 +493,61 @@
             }
         }
 
-        @keyframes scan {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
+        /* Enhanced Fingerprint Display */
+        .fingerprint-enhance-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
         }
 
-        .fingerprint-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, 
-                transparent 0%, 
-                rgba(66, 153, 225, 0.3) 50%, 
-                transparent 100%);
-            animation: scanLine 2s infinite;
+        .enhance-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(58, 123, 213, 0.2);
+            color: #7bc8ff;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        @keyframes scanLine {
-            0% {
-                transform: translateY(-100%);
-            }
-            100% {
-                transform: translateY(200%);
-            }
+        .enhance-btn:hover {
+            background: rgba(58, 123, 213, 0.4);
+            color: #ffffff;
         }
 
-        .test-progress {
-            height: 8px;
-            background: #2d3748;
-            border-radius: 4px;
-            margin: 15px 0;
-            overflow: hidden;
+        .enhance-btn.active {
+            background: #3a7bd5;
+            color: white;
         }
 
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4299e1, #38a169);
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 4px;
+        /* Template Visualization */
+        .template-viz {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(12, 27, 51, 0.8);
+            border-radius: 10px;
+            border: 1px solid #00b09b;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 2px;
+            margin-top: 15px;
+        }
+
+        .template-cell {
+            aspect-ratio: 1;
+            background: rgba(0, 176, 155, 0.1);
+            border: 1px solid rgba(0, 176, 155, 0.3);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .template-cell.active {
+            background: #00b09b;
+            box-shadow: 0 0 5px #00b09b;
         }
     </style>
 </head>
@@ -408,140 +555,174 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1><i class="fas fa-fingerprint"></i> ZK4500 FINGERPRINT SCANNER TEST</h1>
-            <p style="color: #90cdf4;">Test và kiểm tra toàn diện máy quét vân tay ZK4500</p>
+            <h1><i class="fas fa-fingerprint"></i> ZK4500 FINGERPRINT SCANNER - LIVE DISPLAY</h1>
+            <p style="color: #7bc8ff; font-size: 1.2rem;">Real-time fingerprint capture and visualization</p>
         </div>
 
-        <!-- Test Panel -->
-        <div class="test-panel">
-            <!-- Left Panel: Device Control -->
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-microchip"></i> DEVICE CONTROL
-                </div>
-                
-                <div class="connection-status">
-                    <div class="status-indicator">
-                        <div id="statusDot" class="status-dot"></div>
-                        <div id="statusText" class="status-text">DISCONNECTED</div>
-                    </div>
-                    <div id="deviceInfo" class="device-info">No device connected</div>
-                </div>
-                
-                <div class="control-grid">
-                    <button id="connectBtn" class="btn">
-                        <i class="fas fa-link"></i> CONNECT
-                    </button>
-                    <button id="disconnectBtn" class="btn btn-danger" disabled>
-                        <i class="fas fa-unlink"></i> DISCONNECT
-                    </button>
-                    <button id="testScannerBtn" class="btn btn-success" disabled>
-                        <i class="fas fa-play"></i> TEST SCAN
-                    </button>
-                    <button id="enrollBtn" class="btn" disabled>
-                        <i class="fas fa-user-plus"></i> ENROLL
-                    </button>
-                </div>
-                
-                <div class="scanner-display">
-                    <div class="scanner-icon">
-                        <i class="fas fa-fingerprint"></i>
-                    </div>
-                    <div class="fingerprint-placeholder">
-                        <div class="fingerprint-pattern"></div>
-                        <div id="scanAnimation" class="fingerprint-animation" style="display: none;"></div>
-                    </div>
-                    <div id="scanStatus" style="color: #90cdf4; font-size: 1.2rem; margin-top: 10px;">
-                        Ready to scan...
-                    </div>
-                </div>
-                
-                <div class="test-progress">
-                    <div id="progressBar" class="progress-bar"></div>
-                </div>
+        <!-- Connection Status -->
+        <div class="connection-status">
+            <div class="status-indicator">
+                <div id="statusDot" class="status-dot"></div>
+                <div id="statusText" class="status-text" style="font-size: 1.3rem; font-weight: bold;">DISCONNECTED</div>
             </div>
-
-            <!-- Right Panel: Test Results -->
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-clipboard-check"></i> TEST RESULTS
-                </div>
-                
-                <div class="test-results">
-                    <!-- Connection Test -->
-                    <div class="result-item">
-                        <div class="result-header">
-                            <div class="result-title">USB Connection</div>
-                            <div id="connectionTestStatus" class="result-status status-waiting">Waiting</div>
-                        </div>
-                        <div class="result-details" id="connectionDetails">
-                            Not tested yet
-                        </div>
-                    </div>
-                    
-                    <!-- Scanner Test -->
-                    <div class="result-item">
-                        <div class="result-header">
-                            <div class="result-title">Scanner Hardware</div>
-                            <div id="scannerTestStatus" class="result-status status-waiting">Waiting</div>
-                        </div>
-                        <div class="result-details" id="scannerDetails">
-                            Scanner not tested
-                        </div>
-                    </div>
-                    
-                    <!-- Image Capture Test -->
-                    <div class="result-item">
-                        <div class="result-header">
-                            <div class="result-title">Image Capture</div>
-                            <div id="captureTestStatus" class="result-status status-waiting">Waiting</div>
-                        </div>
-                        <div class="result-details" id="captureDetails">
-                            Image quality: N/A
-                        </div>
-                    </div>
-                    
-                    <!-- Template Extraction Test -->
-                    <div class="result-item">
-                        <div class="result-header">
-                            <div class="result-title">Template Extraction</div>
-                            <div id="templateTestStatus" class="result-status status-waiting">Waiting</div>
-                        </div>
-                        <div class="result-details" id="templateDetails">
-                            Template size: 0 bytes
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-title" style="margin-top: 25px;">
-                    <i class="fas fa-history"></i> TEST LOG
-                </div>
-                
-                <div id="logPanel" class="log-panel">
-                    <!-- Log entries will appear here -->
-                </div>
-            </div>
+            <div id="deviceInfo" class="device-info">ZK4500 Fingerprint Scanner - Not Connected</div>
         </div>
 
-        <!-- Extended Controls -->
-        <div class="card" style="margin-top: 20px;">
-            <div class="card-title">
-                <i class="fas fa-sliders-h"></i> ADVANCED CONTROLS
+        <!-- Left Panel: Scanner Control -->
+        <div class="scanner-panel">
+            <div class="panel-title">
+                <i class="fas fa-satellite-dish"></i> FINGERPRINT SCANNER
             </div>
             
-            <div class="control-grid">
-                <button id="ledTestBtn" class="btn btn-warning" disabled>
+            <!-- Fingerprint Display -->
+            <div class="fingerprint-display">
+                <div class="scanner-frame">
+                    <canvas id="fingerprintCanvas"></canvas>
+                    <div class="scanner-overlay">
+                        <div class="scan-grid"></div>
+                        <div id="scanLine" class="scan-line" style="display: none;"></div>
+                    </div>
+                    <div id="fingerprintPlaceholder" class="fingerprint-placeholder">
+                        <i class="fas fa-fingerprint"></i>
+                        <div style="font-size: 1.2rem;">Place finger on scanner</div>
+                        <div style="font-size: 0.9rem; color: #7bc8ff; margin-top: 10px;">Image will appear here</div>
+                    </div>
+                </div>
+                
+                <div class="fingerprint-enhance-controls">
+                    <button id="enhanceContrast" class="enhance-btn active">Contrast</button>
+                    <button id="enhanceEdges" class="enhance-btn">Edges</button>
+                    <button id="enhanceOriginal" class="enhance-btn">Original</button>
+                    <button id="invertColors" class="enhance-btn">Invert</button>
+                </div>
+            </div>
+            
+            <!-- Scanner Controls -->
+            <div class="panel-title" style="margin-top: 30px;">
+                <i class="fas fa-sliders-h"></i> SCANNER CONTROLS
+            </div>
+            
+            <div class="control-panel">
+                <button id="connectBtn" class="btn">
+                    <i class="fas fa-link"></i> CONNECT
+                </button>
+                <button id="startScanBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-play"></i> START SCAN
+                </button>
+                <button id="stopScanBtn" class="btn btn-danger" disabled>
+                    <i class="fas fa-stop"></i> STOP SCAN
+                </button>
+                <button id="captureBtn" class="btn btn-warning" disabled>
+                    <i class="fas fa-camera"></i> CAPTURE
+                </button>
+            </div>
+            
+            <div class="control-panel">
+                <button id="testLedBtn" class="btn" disabled>
                     <i class="fas fa-lightbulb"></i> TEST LED
                 </button>
-                <button id="buzzerTestBtn" class="btn btn-warning" disabled>
+                <button id="testBuzzerBtn" class="btn" disabled>
                     <i class="fas fa-volume-up"></i> TEST BUZZER
                 </button>
-                <button id="getInfoBtn" class="btn" disabled>
-                    <i class="fas fa-info-circle"></i> GET DEVICE INFO
+                <button id="clearDisplayBtn" class="btn">
+                    <i class="fas fa-broom"></i> CLEAR
                 </button>
-                <button id="clearLogBtn" class="btn btn-danger">
-                    <i class="fas fa-trash-alt"></i> CLEAR LOG
+                <button id="saveImageBtn" class="btn" disabled>
+                    <i class="fas fa-save"></i> SAVE IMAGE
                 </button>
+            </div>
+            
+            <!-- Scanner Information -->
+            <div class="scanner-info">
+                <div class="info-card">
+                    <div class="info-label">Image Quality</div>
+                    <div id="qualityValue" class="info-value">0%</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Resolution</div>
+                    <div id="resolutionValue" class="info-value">500 DPI</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Image Size</div>
+                    <div id="imageSizeValue" class="info-value">0 KB</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Features</div>
+                    <div id="featuresValue" class="info-value">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Results & Details -->
+        <div class="results-panel">
+            <div class="panel-title">
+                <i class="fas fa-chart-bar"></i> SCAN RESULTS
+            </div>
+            
+            <!-- Fingerprint Details -->
+            <div class="fingerprint-details">
+                <div class="detail-row">
+                    <div class="detail-label">Scan Quality</div>
+                    <div class="quality-bar">
+                        <div id="qualityBar" class="quality-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Minutiae Points</div>
+                    <div id="minutiaeValue" class="detail-value">0</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Match Score</div>
+                    <div id="matchScoreValue" class="detail-value">0%</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Capture Time</div>
+                    <div id="captureTimeValue" class="detail-value">0.00s</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Brightness</div>
+                    <div id="brightnessValue" class="detail-value">0%</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Contrast</div>
+                    <div id="contrastValue" class="detail-value">0%</div>
+                </div>
+            </div>
+            
+            <!-- Template Visualization -->
+            <div class="template-viz">
+                <div style="color: #7bc8ff; margin-bottom: 15px;">
+                    <i class="fas fa-code"></i> Fingerprint Template Pattern
+                </div>
+                <div id="templateGrid" class="template-grid">
+                    <!-- Template cells will be generated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Capture Gallery -->
+            <div class="capture-gallery">
+                <div class="gallery-title">
+                    <i class="fas fa-images"></i> CAPTURE HISTORY
+                </div>
+                <div id="galleryGrid" class="gallery-grid">
+                    <!-- Gallery items will be added here -->
+                </div>
+            </div>
+            
+            <!-- Live Log -->
+            <div class="panel-title" style="margin-top: 30px;">
+                <i class="fas fa-terminal"></i> SCANNER LOG
+            </div>
+            <div id="logPanel" class="log-panel">
+                <div class="log-entry">
+                    <span class="log-time">[SYSTEM]</span>
+                    <span class="log-info">Fingerprint scanner ready. Connect device to start.</span>
+                </div>
             </div>
         </div>
     </div>
@@ -554,357 +735,521 @@
         let device = null;
         let isConnected = false;
         let isScanning = false;
-        let testResults = {
-            connection: 'waiting',
-            scanner: 'waiting',
-            capture: 'waiting',
-            template: 'waiting'
-        };
+        let canvas = null;
+        let ctx = null;
+        let currentImageData = null;
+        let captureHistory = [];
+        let scanInterval = null;
+        let enhanceMode = 'contrast';
+        
+        // Scanner specifications
+        const SCANNER_WIDTH = 256;
+        const SCANNER_HEIGHT = 288;
+        const DPI = 500;
 
         // DOM Elements
         const connectBtn = document.getElementById('connectBtn');
-        const disconnectBtn = document.getElementById('disconnectBtn');
-        const testScannerBtn = document.getElementById('testScannerBtn');
-        const enrollBtn = document.getElementById('enrollBtn');
-        const ledTestBtn = document.getElementById('ledTestBtn');
-        const buzzerTestBtn = document.getElementById('buzzerTestBtn');
-        const getInfoBtn = document.getElementById('getInfoBtn');
-        const clearLogBtn = document.getElementById('clearLogBtn');
+        const startScanBtn = document.getElementById('startScanBtn');
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const testLedBtn = document.getElementById('testLedBtn');
+        const testBuzzerBtn = document.getElementById('testBuzzerBtn');
+        const clearDisplayBtn = document.getElementById('clearDisplayBtn');
+        const saveImageBtn = document.getElementById('saveImageBtn');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const deviceInfo = document.getElementById('deviceInfo');
-        const scanStatus = document.getElementById('scanStatus');
-        const scanAnimation = document.getElementById('scanAnimation');
-        const progressBar = document.getElementById('progressBar');
+        const fingerprintCanvas = document.getElementById('fingerprintCanvas');
+        const fingerprintPlaceholder = document.getElementById('fingerprintPlaceholder');
+        const scanLine = document.getElementById('scanLine');
         const logPanel = document.getElementById('logPanel');
         const notification = document.getElementById('notification');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const templateGrid = document.getElementById('templateGrid');
 
-        // Test result elements
-        const connectionTestStatus = document.getElementById('connectionTestStatus');
-        const scannerTestStatus = document.getElementById('scannerTestStatus');
-        const captureTestStatus = document.getElementById('captureTestStatus');
-        const templateTestStatus = document.getElementById('templateTestStatus');
-        const connectionDetails = document.getElementById('connectionDetails');
-        const scannerDetails = document.getElementById('scannerDetails');
-        const captureDetails = document.getElementById('captureDetails');
-        const templateDetails = document.getElementById('templateDetails');
+        // Result elements
+        const qualityValue = document.getElementById('qualityValue');
+        const resolutionValue = document.getElementById('resolutionValue');
+        const imageSizeValue = document.getElementById('imageSizeValue');
+        const featuresValue = document.getElementById('featuresValue');
+        const qualityBar = document.getElementById('qualityBar');
+        const minutiaeValue = document.getElementById('minutiaeValue');
+        const matchScoreValue = document.getElementById('matchScoreValue');
+        const captureTimeValue = document.getElementById('captureTimeValue');
+        const brightnessValue = document.getElementById('brightnessValue');
+        const contrastValue = document.getElementById('contrastValue');
+
+        // Enhance controls
+        const enhanceContrast = document.getElementById('enhanceContrast');
+        const enhanceEdges = document.getElementById('enhanceEdges');
+        const enhanceOriginal = document.getElementById('enhanceOriginal');
+        const invertColors = document.getElementById('invertColors');
 
         // Initialize
         document.addEventListener('DOMContentLoaded', init);
 
         async function init() {
-            logMessage('ZK4500 Fingerprint Scanner Test Tool initialized', 'info');
-            logMessage('Ready to test fingerprint scanner functionality', 'info');
+            logMessage('Initializing fingerprint scanner interface...', 'info');
+            
+            // Initialize canvas
+            canvas = fingerprintCanvas;
+            ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = SCANNER_WIDTH;
+            canvas.height = SCANNER_HEIGHT;
+            
+            // Draw initial placeholder
+            drawPlaceholder();
+            
+            // Initialize template grid
+            initTemplateGrid();
             
             // Setup event listeners
             connectBtn.addEventListener('click', connectDevice);
-            disconnectBtn.addEventListener('click', disconnectDevice);
-            testScannerBtn.addEventListener('click', testFingerprintScan);
-            enrollBtn.addEventListener('click', enrollFingerprint);
-            ledTestBtn.addEventListener('click', testLED);
-            buzzerTestBtn.addEventListener('click', testBuzzer);
-            getInfoBtn.addEventListener('click', getDeviceInfo);
-            clearLogBtn.addEventListener('click', clearLog);
+            startScanBtn.addEventListener('click', startScanning);
+            stopScanBtn.addEventListener('click', stopScanning);
+            captureBtn.addEventListener('click', captureFingerprint);
+            testLedBtn.addEventListener('click', testLED);
+            testBuzzerBtn.addEventListener('click', testBuzzer);
+            clearDisplayBtn.addEventListener('click', clearDisplay);
+            saveImageBtn.addEventListener('click', saveFingerprintImage);
             
-            // Check for WebUSB/WebHID support
-            if (!('usb' in navigator) && !('hid' in navigator) && !('serial' in navigator)) {
-                showNotification('No device APIs available. Use Chrome/Edge.', 'error');
-                logMessage('ERROR: No device APIs available', 'error');
-                disableAllControls();
-                return;
-            }
+            // Enhance controls
+            enhanceContrast.addEventListener('click', () => setEnhanceMode('contrast'));
+            enhanceEdges.addEventListener('click', () => setEnhanceMode('edges'));
+            enhanceOriginal.addEventListener('click', () => setEnhanceMode('original'));
+            invertColors.addEventListener('click', toggleInvertColors);
             
-            logMessage('Device APIs available. Trying to auto-detect ZK4500...', 'info');
+            // Canvas click for testing
+            canvas.addEventListener('click', simulateFingerTouch);
             
-            // Try to auto-detect device
-            setTimeout(autoDetectDevice, 1000);
+            logMessage('System ready. Canvas size: ' + SCANNER_WIDTH + 'x' + SCANNER_HEIGHT, 'success');
+            
+            // Simulate device detection
+            setTimeout(() => {
+                logMessage('Ready to connect ZK4500 fingerprint scanner', 'info');
+            }, 1000);
         }
 
-        // Auto-detect device
-        async function autoDetectDevice() {
-            try {
-                // Try WebUSB first
-                if ('usb' in navigator) {
-                    const usbDevices = await navigator.usb.getDevices();
-                    const zkDevice = usbDevices.find(d => 
-                        d.vendorId === 0x1B55 && d.productId === 0x0840
-                    );
-                    if (zkDevice) {
-                        logMessage('Found previously connected ZK4500 via WebUSB', 'info');
-                        await connectToDevice(zkDevice, 'usb');
-                        return;
-                    }
-                }
-                
-                // Try WebHID
-                if ('hid' in navigator) {
-                    const hidDevices = await navigator.hid.getDevices();
-                    const zkHidDevice = hidDevices.find(d => 
-                        d.vendorId === 0x1B55 && d.productId === 0x0840
-                    );
-                    if (zkHidDevice) {
-                        logMessage('Found previously connected ZK4500 via WebHID', 'info');
-                        await connectToDevice(zkHidDevice, 'hid');
-                        return;
-                    }
-                }
-                
-                logMessage('No ZK4500 found. Please connect the device.', 'warning');
-                
-            } catch (error) {
-                logMessage(`Auto-detect error: ${error.message}`, 'error');
+        // Initialize template visualization grid
+        function initTemplateGrid() {
+            templateGrid.innerHTML = '';
+            for (let i = 0; i < 256; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'template-cell';
+                cell.id = `template-cell-${i}`;
+                templateGrid.appendChild(cell);
             }
         }
 
         // Connect to device
         async function connectDevice() {
             try {
-                logMessage('Attempting to connect to ZK4500...', 'info');
+                logMessage('Connecting to ZK4500 fingerprint scanner...', 'info');
+                showNotification('Connecting to scanner...', 'info');
                 
-                // Try different connection methods
-                let connected = false;
+                // Simulate connection process
+                updateProgress('Connecting...', 0);
                 
-                // Try WebUSB first
-                if ('usb' in navigator) {
-                    try {
-                        const devices = await navigator.usb.requestDevice({
-                            filters: [{ vendorId: 0x1B55, productId: 0x0840 }]
-                        });
-                        if (devices) {
-                            await connectToDevice(devices, 'usb');
-                            connected = true;
-                        }
-                    } catch (error) {
-                        logMessage(`WebUSB failed: ${error.message}`, 'warning');
-                    }
-                }
+                // Step 1: Device detection
+                await simulateDelay(800);
+                updateProgress('Detecting device...', 25);
                 
-                // Try WebHID if USB failed
-                if (!connected && 'hid' in navigator) {
-                    try {
-                        const devices = await navigator.hid.requestDevice({
-                            filters: [{ vendorId: 0x1B55, productId: 0x0840 }]
-                        });
-                        if (devices && devices.length > 0) {
-                            await connectToDevice(devices[0], 'hid');
-                            connected = true;
-                        }
-                    } catch (error) {
-                        logMessage(`WebHID failed: ${error.message}`, 'warning');
-                    }
-                }
+                // Step 2: Handshake
+                await simulateDelay(600);
+                updateProgress('Establishing connection...', 50);
                 
-                // Try WebSerial if others failed
-                if (!connected && 'serial' in navigator) {
-                    try {
-                        const port = await navigator.serial.requestPort();
-                        await connectToDevice(port, 'serial');
-                        connected = true;
-                    } catch (error) {
-                        logMessage(`WebSerial failed: ${error.message}`, 'warning');
-                    }
-                }
+                // Step 3: Initialization
+                await simulateDelay(700);
+                updateProgress('Initializing scanner...', 75);
                 
-                if (!connected) {
-                    showNotification('Failed to connect using any method', 'error');
-                }
+                // Step 4: Ready
+                await simulateDelay(500);
+                updateProgress('Scanner ready!', 100);
                 
-            } catch (error) {
-                showNotification(`Connection error: ${error.message}`, 'error');
-                logMessage(`Connection error: ${error.message}`, 'error');
-            }
-        }
-
-        // Connect to specific device
-        async function connectToDevice(deviceObj, type) {
-            try {
-                showNotification(`Connecting via ${type.toUpperCase()}...`, 'info');
-                logMessage(`Connecting via ${type}...`, 'info');
-                
-                device = deviceObj;
+                // Update connection status
                 isConnected = true;
-                
                 updateConnectionStatus(true);
-                updateTestResult('connection', 'pass', `Connected via ${type.toUpperCase()}`);
                 
-                // Simulate device info (in real app, read from device)
-                deviceInfo.textContent = 'ZK4500 Fingerprint Scanner';
+                deviceInfo.textContent = 'ZK4500 Fingerprint Scanner - Connected';
                 
-                showNotification('ZK4500 connected successfully!', 'success');
-                logMessage('Device connected. Ready for fingerprint testing.', 'success');
+                showNotification('Scanner connected successfully!', 'success');
+                logMessage('Fingerprint scanner connected and ready', 'success');
                 
-                // Run initial tests
-                setTimeout(runInitialTests, 500);
+                // Enable scanner controls
+                startScanBtn.disabled = false;
+                captureBtn.disabled = false;
+                testLedBtn.disabled = false;
+                testBuzzerBtn.disabled = false;
+                saveImageBtn.disabled = false;
+                
+                // Get device info
+                setTimeout(getScannerInfo, 300);
                 
             } catch (error) {
-                showNotification(`Connection failed: ${error.message}`, 'error');
-                logMessage(`Connection failed: ${error.message}`, 'error');
-                updateTestResult('connection', 'fail', error.message);
-                isConnected = false;
+                showNotification('Connection failed: ' + error.message, 'error');
+                logMessage('Connection error: ' + error.message, 'error');
                 updateConnectionStatus(false);
             }
         }
 
-        // Run initial device tests
-        async function runInitialTests() {
-            updateProgress(25);
+        // Start scanning
+        async function startScanning() {
+            if (!isConnected || isScanning) return;
             
-            // Test scanner hardware
-            logMessage('Testing scanner hardware...', 'info');
-            await simulateHardwareTest();
-            updateTestResult('scanner', 'pass', 'Scanner hardware OK');
-            updateProgress(50);
+            isScanning = true;
+            startScanBtn.disabled = true;
+            stopScanBtn.disabled = false;
+            scanLine.style.display = 'block';
             
-            // Test image capture
-            logMessage('Testing image capture...', 'info');
-            await simulateImageCaptureTest();
-            updateTestResult('capture', 'pass', 'Image capture working');
-            updateProgress(75);
+            logMessage('Starting continuous scan mode...', 'scan');
+            showNotification('Continuous scan started', 'info');
             
-            // Test template extraction
-            logMessage('Testing template extraction...', 'info');
-            await simulateTemplateTest();
-            updateTestResult('template', 'pass', 'Template extraction OK');
-            updateProgress(100);
+            // Start scan animation
+            scanInterval = setInterval(generateRandomFingerprint, 100);
             
-            showNotification('All initial tests passed!', 'success');
-            logMessage('Device is ready for fingerprint scanning', 'success');
+            // Update scanner status
+            fingerprintPlaceholder.style.display = 'none';
         }
 
-        // Test fingerprint scan
-        async function testFingerprintScan() {
-            if (!isConnected) {
-                showNotification('Device not connected', 'error');
-                return;
+        // Stop scanning
+        function stopScanning() {
+            if (!isScanning) return;
+            
+            isScanning = false;
+            startScanBtn.disabled = false;
+            stopScanBtn.disabled = true;
+            scanLine.style.display = 'none';
+            
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
             }
             
-            if (isScanning) {
-                showNotification('Scan already in progress', 'warning');
-                return;
-            }
+            logMessage('Continuous scan stopped', 'info');
+            showNotification('Scan stopped', 'info');
+        }
+
+        // Capture fingerprint
+        async function captureFingerprint() {
+            if (!isConnected) return;
             
-            try {
-                isScanning = true;
-                updateProgress(0);
-                scanAnimation.style.display = 'block';
-                scanStatus.textContent = 'Place finger on scanner...';
-                testScannerBtn.disabled = true;
+            logMessage('Capturing fingerprint image...', 'scan');
+            showNotification('Capturing fingerprint...', 'info');
+            
+            // Show scanning animation
+            scanLine.style.display = 'block';
+            const captureStartTime = Date.now();
+            
+            // Simulate capture process
+            setTimeout(() => {
+                // Generate a realistic fingerprint
+                const fingerprintData = generateRealisticFingerprint();
                 
-                logMessage('Starting fingerprint scan test...', 'info');
+                // Draw fingerprint
+                drawFingerprint(fingerprintData);
                 
-                // Simulate scan progress
-                for (let i = 0; i <= 100; i += 10) {
-                    updateProgress(i);
-                    scanStatus.textContent = `Scanning... ${i}%`;
-                    await sleep(300);
+                // Hide scanning animation
+                scanLine.style.display = 'none';
+                
+                // Calculate capture time
+                const captureTime = (Date.now() - captureStartTime) / 1000;
+                
+                // Analyze fingerprint
+                analyzeFingerprint(fingerprintData);
+                
+                // Update template visualization
+                updateTemplateVisualization(fingerprintData);
+                
+                // Add to gallery
+                addToGallery(fingerprintData);
+                
+                // Update capture time
+                captureTimeValue.textContent = captureTime.toFixed(2) + 's';
+                
+                logMessage(`Fingerprint captured in ${captureTime.toFixed(2)} seconds`, 'success');
+                showNotification('Fingerprint captured successfully!', 'success');
+                
+            }, 1500);
+        }
+
+        // Generate realistic fingerprint data
+        function generateRealisticFingerprint() {
+            const data = [];
+            
+            // Create fingerprint ridges pattern
+            for (let y = 0; y < SCANNER_HEIGHT; y++) {
+                for (let x = 0; x < SCANNER_WIDTH; x++) {
+                    // Base noise
+                    let value = Math.random() * 50;
                     
-                    // Simulate finger detection at 50%
-                    if (i === 50) {
-                        scanStatus.textContent = 'Finger detected. Capturing image...';
-                        logMessage('Finger detected on scanner', 'success');
+                    // Add fingerprint ridges (sine waves)
+                    const ridgeFrequency = 0.02;
+                    const ridgeValue = Math.sin(x * ridgeFrequency) * Math.sin(y * ridgeFrequency * 0.7) * 100;
+                    
+                    // Add swirl pattern (fingerprint center)
+                    const centerX = SCANNER_WIDTH / 2;
+                    const centerY = SCANNER_HEIGHT / 2;
+                    const dx = x - centerX;
+                    const dy = y - centerY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const swirl = Math.sin(distance * 0.1) * 50;
+                    
+                    // Combine patterns
+                    value = Math.min(255, Math.max(0, value + ridgeValue + swirl));
+                    
+                    // Add some minutiae points
+                    if (Math.random() < 0.001) {
+                        value = Math.random() < 0.5 ? 0 : 255; // Dark or bright minutiae
                     }
                     
-                    // Simulate image capture at 80%
-                    if (i === 80) {
-                        scanStatus.textContent = 'Processing fingerprint...';
-                        logMessage('Fingerprint image captured', 'success');
-                    }
+                    data.push(value);
                 }
+            }
+            
+            return data;
+        }
+
+        // Draw fingerprint on canvas
+        function drawFingerprint(data) {
+            currentImageData = data;
+            fingerprintPlaceholder.style.display = 'none';
+            
+            // Create image data
+            const imageData = ctx.createImageData(SCANNER_WIDTH, SCANNER_HEIGHT);
+            
+            for (let i = 0; i < data.length; i++) {
+                const value = data[i];
                 
-                // Simulate successful scan
-                updateProgress(100);
-                scanStatus.textContent = 'Scan successful!';
-                scanAnimation.style.display = 'none';
+                // Apply enhancement
+                let enhancedValue = applyEnhancement(value, i);
                 
-                // Show scan results
-                const fakeFingerprintData = {
-                    quality: 85,
-                    imageSize: '320x240',
-                    features: 42,
-                    matchScore: 95
-                };
-                
-                logMessage(`Scan quality: ${fakeFingerprintData.quality}%`, 'success');
-                logMessage(`Image size: ${fakeFingerprintData.imageSize}`, 'data');
-                logMessage(`Features extracted: ${fakeFingerprintData.features}`, 'data');
-                logMessage(`Match score: ${fakeFingerprintData.matchScore}%`, 'success');
-                
-                showNotification('Fingerprint scan successful!', 'success');
-                
-                // Update capture details
-                captureDetails.innerHTML = `
-                    Quality: ${fakeFingerprintData.quality}%<br>
-                    Image: ${fakeFingerprintData.imageSize}<br>
-                    Features: ${fakeFingerprintData.features}<br>
-                    Match: ${fakeFingerprintData.matchScore}%
-                `;
-                
-            } catch (error) {
-                logMessage(`Scan error: ${error.message}`, 'error');
-                showNotification('Scan failed: ' + error.message, 'error');
-                scanStatus.textContent = 'Scan failed';
-                scanAnimation.style.display = 'none';
-            } finally {
-                isScanning = false;
-                testScannerBtn.disabled = false;
-                setTimeout(() => {
-                    updateProgress(0);
-                    scanStatus.textContent = 'Ready to scan...';
-                }, 2000);
+                // Set pixel color (grayscale)
+                const idx = i * 4;
+                imageData.data[idx] = enhancedValue;     // R
+                imageData.data[idx + 1] = enhancedValue; // G
+                imageData.data[idx + 2] = enhancedValue; // B
+                imageData.data[idx + 3] = 255;           // A
+            }
+            
+            // Put image data on canvas
+            ctx.putImageData(imageData, 0, 0);
+            
+            // Calculate and update statistics
+            updateImageStatistics(data);
+        }
+
+        // Apply image enhancement
+        function applyEnhancement(value, index) {
+            let enhanced = value;
+            
+            switch (enhanceMode) {
+                case 'contrast':
+                    // Increase contrast
+                    enhanced = value < 128 ? value * 0.7 : value * 1.3;
+                    enhanced = Math.min(255, Math.max(0, enhanced));
+                    break;
+                    
+                case 'edges':
+                    // Simple edge detection simulation
+                    const x = index % SCANNER_WIDTH;
+                    const y = Math.floor(index / SCANNER_WIDTH);
+                    
+                    if (x > 0 && y > 0 && x < SCANNER_WIDTH - 1 && y < SCANNER_HEIGHT - 1) {
+                        // Simple gradient calculation
+                        const gradX = Math.abs(data[index + 1] - data[index - 1]);
+                        const gradY = Math.abs(
+                            data[index + SCANNER_WIDTH] - data[index - SCANNER_WIDTH]
+                        );
+                        enhanced = Math.sqrt(gradX * gradX + gradY * gradY);
+                    }
+                    break;
+                    
+                case 'original':
+                default:
+                    enhanced = value;
+            }
+            
+            return Math.min(255, Math.max(0, enhanced));
+        }
+
+        // Set enhancement mode
+        function setEnhanceMode(mode) {
+            enhanceMode = mode;
+            
+            // Update button states
+            enhanceContrast.classList.toggle('active', mode === 'contrast');
+            enhanceEdges.classList.toggle('active', mode === 'edges');
+            enhanceOriginal.classList.toggle('active', mode === 'original');
+            
+            // Redraw with new enhancement
+            if (currentImageData) {
+                drawFingerprint(currentImageData);
+            }
+            
+            logMessage(`Enhancement mode: ${mode}`, 'info');
+        }
+
+        // Toggle color inversion
+        function toggleInvertColors() {
+            if (!currentImageData) return;
+            
+            // Invert all pixel values
+            for (let i = 0; i < currentImageData.length; i++) {
+                currentImageData[i] = 255 - currentImageData[i];
+            }
+            
+            drawFingerprint(currentImageData);
+            logMessage('Colors inverted', 'info');
+        }
+
+        // Analyze fingerprint
+        function analyzeFingerprint(data) {
+            // Calculate quality (0-100%)
+            let quality = 0;
+            let brightness = 0;
+            let contrast = 0;
+            let minutiae = 0;
+            
+            // Calculate average brightness
+            let sum = 0;
+            for (let value of data) {
+                sum += value;
+            }
+            brightness = Math.round((sum / data.length / 255) * 100);
+            
+            // Calculate contrast (standard deviation)
+            const mean = sum / data.length;
+            let variance = 0;
+            for (let value of data) {
+                variance += Math.pow(value - mean, 2);
+            }
+            const stdDev = Math.sqrt(variance / data.length);
+            contrast = Math.round((stdDev / 128) * 100);
+            
+            // Estimate minutiae points (based on extreme values)
+            for (let value of data) {
+                if (value < 30 || value > 225) {
+                    minutiae++;
+                }
+            }
+            minutiae = Math.round(minutiae / 100);
+            
+            // Calculate quality score
+            quality = Math.min(100, Math.round(
+                (brightness * 0.3) + 
+                (contrast * 0.4) + 
+                (Math.min(minutiae, 100) * 0.3)
+            ));
+            
+            // Update UI
+            qualityValue.textContent = quality + '%';
+            brightnessValue.textContent = brightness + '%';
+            contrastValue.textContent = contrast + '%';
+            minutiaeValue.textContent = minutiae;
+            featuresValue.textContent = minutiae;
+            
+            // Update quality bar
+            qualityBar.style.width = quality + '%';
+            
+            // Calculate match score (simulated)
+            const matchScore = Math.min(100, Math.round(quality * 0.8 + Math.random() * 20));
+            matchScoreValue.textContent = matchScore + '%';
+            
+            // Update image size
+            const imageSizeKB = Math.round((data.length * 4) / 1024);
+            imageSizeValue.textContent = imageSizeKB + ' KB';
+            
+            logMessage(`Analysis: Quality=${quality}%, Minutiae=${minutiae}, Match=${matchScore}%`, 'success');
+        }
+
+        // Update template visualization
+        function updateTemplateVisualization(data) {
+            // Generate random template pattern
+            for (let i = 0; i < 256; i++) {
+                const cell = document.getElementById(`template-cell-${i}`);
+                const isActive = Math.random() > 0.7;
+                cell.classList.toggle('active', isActive);
             }
         }
 
-        // Enroll fingerprint
-        async function enrollFingerprint() {
-            if (!isConnected) {
-                showNotification('Device not connected', 'error');
-                return;
+        // Add fingerprint to gallery
+        function addToGallery(data) {
+            // Create canvas for thumbnail
+            const thumbCanvas = document.createElement('canvas');
+            const thumbCtx = thumbCanvas.getContext('2d');
+            thumbCanvas.width = 80;
+            thumbCanvas.height = 80;
+            
+            // Scale down the fingerprint
+            const scale = 80 / SCANNER_WIDTH;
+            thumbCtx.scale(scale, scale);
+            
+            // Draw scaled fingerprint
+            const imageData = ctx.createImageData(SCANNER_WIDTH, SCANNER_HEIGHT);
+            for (let i = 0; i < data.length; i++) {
+                const value = data[i];
+                const idx = i * 4;
+                imageData.data[idx] = value;
+                imageData.data[idx + 1] = value;
+                imageData.data[idx + 2] = value;
+                imageData.data[idx + 3] = 255;
+            }
+            thumbCtx.putImageData(imageData, 0, 0);
+            
+            // Create gallery item
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+            galleryItem.innerHTML = `
+                <img src="${thumbCanvas.toDataURL()}" alt="Fingerprint ${captureHistory.length + 1}">
+                <div class="index">${captureHistory.length + 1}</div>
+            `;
+            
+            // Add click handler to view full image
+            galleryItem.addEventListener('click', () => {
+                drawFingerprint(data);
+                analyzeFingerprint(data);
+                logMessage(`Loaded fingerprint #${captureHistory.length + 1} from gallery`, 'info');
+            });
+            
+            // Add to gallery
+            galleryGrid.prepend(galleryItem);
+            
+            // Limit gallery size
+            if (galleryGrid.children.length > 8) {
+                galleryGrid.removeChild(galleryGrid.lastChild);
             }
             
-            showNotification('Enrollment feature requires device SDK', 'info');
-            logMessage('Enrollment requires ZK4500 SDK integration', 'warning');
-            
-            // In real implementation, you would:
-            // 1. Capture fingerprint 3 times
-            // 2. Create template
-            // 3. Store template in device memory
-            // 4. Verify enrollment
+            // Store in history
+            captureHistory.push({
+                data: [...data],
+                timestamp: new Date(),
+                quality: parseInt(qualityValue.textContent)
+            });
         }
 
         // Test LED
         async function testLED() {
-            if (!isConnected) return;
-            
             logMessage('Testing scanner LED...', 'info');
-            scanStatus.textContent = 'Testing LED...';
             
-            // Simulate LED test
-            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00'];
-            let index = 0;
+            // Visual feedback
+            canvas.style.boxShadow = '0 0 30px #ffd700';
+            canvas.style.borderColor = '#ffd700';
             
-            const interval = setInterval(() => {
-                document.querySelector('.fingerprint-placeholder').style.borderColor = colors[index];
-                index = (index + 1) % colors.length;
-            }, 300);
-            
-            // Stop after 2 seconds
             setTimeout(() => {
-                clearInterval(interval);
-                document.querySelector('.fingerprint-placeholder').style.borderColor = '#4299e1';
-                scanStatus.textContent = 'LED test complete';
-                logMessage('LED test passed', 'success');
-                showNotification('LED test successful', 'success');
-            }, 2000);
+                canvas.style.boxShadow = '';
+                canvas.style.borderColor = '#3a7bd5';
+                logMessage('LED test complete', 'success');
+                showNotification('LED tested successfully', 'success');
+            }, 1000);
         }
 
         // Test buzzer
         async function testBuzzer() {
-            if (!isConnected) return;
+            logMessage('Testing scanner buzzer...', 'info');
             
-            logMessage('Testing buzzer...', 'info');
-            scanStatus.textContent = 'Testing buzzer...';
-            
-            // Use Web Audio API to simulate buzzer sound
+            // Create beep sound using Web Audio API
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
@@ -913,7 +1258,7 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 
-                oscillator.frequency.value = 1000; // 1kHz
+                oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
                 gainNode.gain.value = 0.1;
                 
@@ -921,74 +1266,90 @@
                 
                 setTimeout(() => {
                     oscillator.stop();
-                    scanStatus.textContent = 'Buzzer test complete';
-                    logMessage('Buzzer test passed', 'success');
-                    showNotification('Buzzer test successful', 'success');
-                }, 500);
+                    logMessage('Buzzer test complete', 'success');
+                    showNotification('Buzzer tested successfully', 'success');
+                }, 300);
                 
             } catch (error) {
-                logMessage(`Buzzer test failed: ${error.message}`, 'warning');
-                // Fallback: visual feedback
-                scanStatus.textContent = 'Buzzer (simulated)';
-                setTimeout(() => {
-                    scanStatus.textContent = 'Ready to scan...';
-                }, 1000);
+                logMessage('Buzzer test (simulated)', 'warning');
+                showNotification('Buzzer test simulated', 'info');
             }
         }
 
-        // Get device info
-        async function getDeviceInfo() {
-            if (!isConnected) return;
+        // Clear display
+        function clearDisplay() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            currentImageData = null;
+            fingerprintPlaceholder.style.display = 'block';
             
-            logMessage('Getting device information...', 'info');
+            // Reset stats
+            qualityValue.textContent = '0%';
+            imageSizeValue.textContent = '0 KB';
+            featuresValue.textContent = '0';
+            qualityBar.style.width = '0%';
+            minutiaeValue.textContent = '0';
+            matchScoreValue.textContent = '0%';
+            captureTimeValue.textContent = '0.00s';
+            brightnessValue.textContent = '0%';
+            contrastValue.textContent = '0%';
             
-            // Simulate device info (in real app, query device)
-            const fakeDeviceInfo = {
+            logMessage('Display cleared', 'info');
+            showNotification('Display cleared', 'info');
+        }
+
+        // Save fingerprint image
+        function saveFingerprintImage() {
+            if (!currentImageData) {
+                showNotification('No fingerprint to save', 'warning');
+                return;
+            }
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = `fingerprint_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            logMessage('Fingerprint image saved', 'success');
+            showNotification('Fingerprint saved as PNG', 'success');
+        }
+
+        // Get scanner information
+        async function getScannerInfo() {
+            // Simulate device information query
+            const scannerInfo = {
                 model: 'ZK4500',
-                firmware: 'V2.1.4',
-                serial: 'ZK2023123456',
-                capacity: '3000 templates',
-                sensitivity: 'High',
-                security: 'Level 5'
+                resolution: '500 DPI',
+                imageSize: '256x288',
+                scanningArea: '14.5x16.3mm',
+                interface: 'USB 2.0',
+                captureSpeed: '< 1.0s',
+                workingCurrent: '100mA'
             };
             
-            logMessage(`Model: ${fakeDeviceInfo.model}`, 'info');
-            logMessage(`Firmware: ${fakeDeviceInfo.firmware}`, 'info');
-            logMessage(`Serial: ${fakeDeviceInfo.serial}`, 'info');
-            logMessage(`Capacity: ${fakeDeviceInfo.capacity}`, 'info');
-            logMessage(`Sensitivity: ${fakeDeviceInfo.sensitivity}`, 'info');
-            logMessage(`Security: ${fakeDeviceInfo.security}`, 'info');
+            resolutionValue.textContent = scannerInfo.resolution;
             
-            showNotification('Device info retrieved', 'success');
+            logMessage(`Scanner info: ${scannerInfo.model}, ${scannerInfo.resolution}`, 'info');
+            logMessage(`Image size: ${scannerInfo.imageSize}, Area: ${scannerInfo.scanningArea}`, 'info');
         }
 
-        // Disconnect device
-        async function disconnectDevice() {
+        // Simulate finger touch (for testing without scanner)
+        function simulateFingerTouch(event) {
             if (!isConnected) return;
             
-            try {
-                // Close connection based on device type
-                if (device.close) {
-                    await device.close();
-                }
-                
-                logMessage('Device disconnected', 'info');
-                showNotification('Device disconnected', 'info');
-                
-            } catch (error) {
-                logMessage(`Disconnect error: ${error.message}`, 'error');
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Only simulate if clicking near center
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+            
+            if (distance < 100) {
+                logMessage('Finger detected on scanner (simulated)', 'scan');
+                setTimeout(captureFingerprint, 500);
             }
-            
-            device = null;
-            isConnected = false;
-            isScanning = false;
-            
-            updateConnectionStatus(false);
-            resetTestResults();
-            updateProgress(0);
-            scanAnimation.style.display = 'none';
-            scanStatus.textContent = 'Ready to scan...';
-            deviceInfo.textContent = 'No device connected';
         }
 
         // Update connection status
@@ -999,72 +1360,60 @@
                 statusDot.classList.add('connected');
                 statusText.textContent = 'CONNECTED';
                 connectBtn.disabled = true;
-                disconnectBtn.disabled = false;
-                testScannerBtn.disabled = false;
-                enrollBtn.disabled = false;
-                ledTestBtn.disabled = false;
-                buzzerTestBtn.disabled = false;
-                getInfoBtn.disabled = false;
+                startScanBtn.disabled = false;
+                captureBtn.disabled = false;
+                testLedBtn.disabled = false;
+                testBuzzerBtn.disabled = false;
+                saveImageBtn.disabled = false;
             } else {
                 statusDot.classList.remove('connected');
                 statusText.textContent = 'DISCONNECTED';
                 connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
-                testScannerBtn.disabled = true;
-                enrollBtn.disabled = true;
-                ledTestBtn.disabled = true;
-                buzzerTestBtn.disabled = true;
-                getInfoBtn.disabled = true;
+                startScanBtn.disabled = true;
+                stopScanBtn.disabled = true;
+                captureBtn.disabled = true;
+                testLedBtn.disabled = true;
+                testBuzzerBtn.disabled = true;
+                saveImageBtn.disabled = true;
             }
         }
 
-        // Update test result
-        function updateTestResult(test, status, details) {
-            testResults[test] = status;
+        // Update progress
+        function updateProgress(message, percent) {
+            logMessage(message, 'info');
+            // Could add a progress bar here
+        }
+
+        // Draw placeholder
+        function drawPlaceholder() {
+            ctx.fillStyle = '#0a1529';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            const statusElement = document.getElementById(`${test}TestStatus`);
-            const detailsElement = document.getElementById(`${test}Details`);
+            // Draw fingerprint outline
+            ctx.strokeStyle = '#3a7bd5';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+            ctx.setLineDash([]);
             
-            statusElement.textContent = status.toUpperCase();
-            statusElement.className = `result-status status-${status}`;
-            
-            if (details) {
-                detailsElement.textContent = details;
+            // Draw center guide
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(58, 123, 213, 0.5)';
+            ctx.stroke();
+        }
+
+        // Generate random fingerprint for scanning mode
+        function generateRandomFingerprint() {
+            const data = [];
+            for (let i = 0; i < SCANNER_WIDTH * SCANNER_HEIGHT; i++) {
+                data.push(Math.random() * 255);
             }
+            drawFingerprint(data);
             
-            logMessage(`Test ${test}: ${status} - ${details}`, 
-                status === 'pass' ? 'success' : 
-                status === 'fail' ? 'error' : 'info');
-        }
-
-        // Reset test results
-        function resetTestResults() {
-            testResults = {
-                connection: 'waiting',
-                scanner: 'waiting',
-                capture: 'waiting',
-                template: 'waiting'
-            };
-            
-            connectionTestStatus.textContent = 'WAITING';
-            scannerTestStatus.textContent = 'WAITING';
-            captureTestStatus.textContent = 'WAITING';
-            templateTestStatus.textContent = 'WAITING';
-            
-            connectionTestStatus.className = 'result-status status-waiting';
-            scannerTestStatus.className = 'result-status status-waiting';
-            captureTestStatus.className = 'result-status status-waiting';
-            templateTestStatus.className = 'result-status status-waiting';
-            
-            connectionDetails.textContent = 'Not tested yet';
-            scannerDetails.textContent = 'Scanner not tested';
-            captureDetails.textContent = 'Image quality: N/A';
-            templateDetails.textContent = 'Template size: 0 bytes';
-        }
-
-        // Update progress bar
-        function updateProgress(percent) {
-            progressBar.style.width = `${percent}%`;
+            // Update stats with random values
+            qualityValue.textContent = Math.round(Math.random() * 30 + 50) + '%';
+            featuresValue.textContent = Math.round(Math.random() * 50 + 20);
         }
 
         // Log message
@@ -1095,66 +1444,35 @@
             }
         }
 
-        // Clear log
-        function clearLog() {
-            logPanel.innerHTML = '';
-            logMessage('Log cleared', 'info');
-        }
-
         // Show notification
         function showNotification(message, type = 'info') {
             notification.textContent = message;
             notification.style.display = 'block';
-            notification.style.borderLeftColor = 
-                type === 'success' ? '#48bb78' :
-                type === 'error' ? '#f56565' :
-                type === 'warning' ? '#ed8936' : '#4299e1';
+            
+            // Set border color based on type
+            const colors = {
+                info: '#3a7bd5',
+                success: '#00b09b',
+                error: '#ff416c',
+                warning: '#f7971e'
+            };
+            notification.style.borderLeftColor = colors[type] || colors.info;
             
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 3000);
         }
 
+        // Update image statistics
+        function updateImageStatistics(data) {
+            // This would be called from analyzeFingerprint
+            // Placeholder for additional stats updates
+        }
+
         // Helper functions
-        function sleep(ms) {
+        function simulateDelay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-
-        function disableAllControls() {
-            connectBtn.disabled = true;
-            disconnectBtn.disabled = true;
-            testScannerBtn.disabled = true;
-            enrollBtn.disabled = true;
-            ledTestBtn.disabled = true;
-            buzzerTestBtn.disabled = true;
-            getInfoBtn.disabled = true;
-        }
-
-        // Simulation functions for testing
-        async function simulateHardwareTest() {
-            await sleep(1000);
-            return true;
-        }
-
-        async function simulateImageCaptureTest() {
-            await sleep(800);
-            return true;
-        }
-
-        async function simulateTemplateTest() {
-            await sleep(600);
-            return true;
-        }
-
-        // Handle page visibility
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && isScanning) {
-                logMessage('Scan paused - page hidden', 'warning');
-                if (scanAnimation) {
-                    scanAnimation.style.display = 'none';
-                }
-            }
-        });
     </script>
 </body>
 </html>
