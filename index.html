@@ -1,1293 +1,825 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 USB Direct Connection - Fingerprint Test</title>
+    <title>ZK4500 USB Connection Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #2ec4b6;
-            --danger: #e71d36;
-            --warning: #ff9f1c;
-            --usb-color: #7950f2;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a2a6c, #2d3b7a);
+            color: #fff;
             min-height: 100vh;
             padding: 20px;
-            color: #333;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 20px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            background: linear-gradient(135deg, var(--usb-color) 0%, #6c63ff 100%);
-            color: white;
-            padding: 30px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
-            margin-top: -30px;
-            margin-left: -30px;
-            margin-right: -30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
+            color: #6ee7b7;
         }
 
-        .usb-connection-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 4px solid var(--warning);
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
-        /* USB Connection Status */
-        .usb-status {
+        .status-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3b82f6;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            border: 3px solid #dee2e6;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .status-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #dc3545;
-            animation: pulse-red 2s infinite;
-        }
-
-        .status-dot.connected {
-            background: #28a745;
-            animation: pulse-green 2s infinite;
-        }
-
-        @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-        }
-
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-        }
-
-        /* Main Dashboard */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            border: 2px solid #e9ecef;
-            transition: transform 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .card h2 {
-            color: var(--primary);
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
+        }
+
+        .status-title {
+            font-size: 1.5rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* USB Device Info */
-        .usb-device-info {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 15px;
-            border: 2px dashed #dee2e6;
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
-        .info-grid {
+        .connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .device-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
-            margin-top: 15px;
+            margin-bottom: 25px;
         }
 
         .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
         }
 
         .info-label {
-            color: #6c757d;
-            font-weight: 500;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+            margin-bottom: 5px;
         }
 
         .info-value {
-            color: var(--primary);
-            font-weight: 600;
+            font-size: 1.2rem;
             font-family: 'Courier New', monospace;
+            word-break: break-all;
         }
 
-        /* Fingerprint Display */
-        .fingerprint-display {
-            width: 100%;
-            height: 300px;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        .control-panel {
+            background: rgba(0, 0, 0, 0.4);
             border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 3px solid var(--dark);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
-        #fingerprintCanvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        .scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+        .control-title {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            color: #6ee7b7;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 5;
-        }
-
-        .scanner-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                var(--success) 50%, 
-                transparent 100%);
-            box-shadow: 0 0 20px var(--success);
-            z-index: 10;
-            display: none;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
             align-items: center;
             gap: 10px;
         }
 
-        .btn-usb {
-            background: linear-gradient(135deg, var(--usb-color) 0%, #6c63ff 100%);
-            color: white;
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .btn-usb:hover {
-            background: linear-gradient(135deg, #6c63ff 0%, var(--usb-color) 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(121, 80, 242, 0.3);
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            min-width: 200px;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: #3b82f6;
             color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-3px);
         }
 
         .btn-success {
-            background: var(--success);
+            background: #10b981;
             color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-3px);
         }
 
         .btn-warning {
-            background: var(--warning);
+            background: #f59e0b;
             color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-3px);
         }
 
         .btn-danger {
-            background: var(--danger);
+            background: #ef4444;
             color: white;
         }
 
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-3px);
+        }
+
         .btn:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
         }
 
-        .btn-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        .log-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
-        /* Data Log */
-        .data-log {
-            height: 250px;
-            overflow-y: auto;
-            background: #1a1a2e;
-            color: #f8f9fa;
-            padding: 15px;
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .log-title {
+            font-size: 1.5rem;
+            color: #6ee7b7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .log-content {
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 8px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            margin-top: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         .log-entry {
-            padding: 8px;
-            border-bottom: 1px solid #2d3748;
-            word-break: break-all;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .log-entry.usb {
-            color: var(--usb-color);
+        .log-time {
+            color: #a5b4fc;
+            margin-right: 15px;
         }
 
-        .log-entry.fingerprint {
-            color: var(--success);
-            font-weight: 600;
+        .log-info {
+            color: #6ee7b7;
         }
 
-        /* USB Command Panel */
-        .usb-commands {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+        .log-warning {
+            color: #fbbf24;
         }
 
-        .command-btn {
-            padding: 10px;
-            background: white;
-            border: 2px solid #dee2e6;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
+        .log-error {
+            color: #f87171;
+        }
+
+        .log-data {
+            color: #c7d2fe;
+        }
+
+        .footer {
             text-align: center;
-            font-size: 14px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a5b4fc;
+            font-size: 0.9rem;
         }
 
-        .command-btn:hover {
-            border-color: var(--primary);
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
-
-        /* Notification */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 15px 25px;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
             font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            transform: translateX(150%);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: none;
+            animation: slideIn 0.3s ease;
         }
 
-        .notification.show {
-            transform: translateX(0);
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
-        .notification-success {
-            background: var(--success);
+        .notification.success {
+            background: #10b981;
         }
 
-        .notification-error {
-            background: var(--danger);
+        .notification.error {
+            background: #ef4444;
         }
 
-        .notification-usb {
-            background: var(--usb-color);
+        .notification.warning {
+            background: #f59e0b;
         }
 
-        /* USB Debug Info */
-        .usb-debug {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            border: 2px solid #dee2e6;
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+        .notification.info {
+            background: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .device-info {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <h1><i class="fas fa-usb"></i> ZK4500 USB Direct Connection</h1>
-            <p>Kết nối trực tiếp với ZK4500 qua USB HID Interface</p>
+            <h1><i class="fas fa-microchip"></i> ZK4500 USB Connection Tool</h1>
+            <p>Connect and communicate with ZK4500 via WebUSB API</p>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #a5b4fc;">VID: 0x1B55 | PID: 0x0840</p>
         </div>
 
-        <!-- USB Connection Info -->
-        <div class="usb-connection-info">
-            <h3><i class="fas fa-info-circle"></i> Thông tin kết nối USB:</h3>
-            <p>ZK4500 hỗ trợ 2 chế độ USB: <strong>HID Mode</strong> (Human Interface Device) và <strong>CDC Mode</strong> (Serial).</p>
-            <p>Ứng dụng này sử dụng <strong>WebUSB API</strong> để kết nối trực tiếp qua USB.</p>
-        </div>
-
-        <!-- USB Status -->
-        <div class="usb-status">
-            <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <div>
-                    <h3 id="statusText">USB CHƯA KẾT NỐI</h3>
-                    <p id="statusDescription">Cắm ZK4500 vào cổng USB và nhấn "Kết nối USB"</p>
+        <div class="status-card">
+            <div class="status-header">
+                <div class="status-title">
+                    <i class="fas fa-plug"></i> Connection Status
+                </div>
+                <div id="connectionStatus" class="status-badge disconnected">DISCONNECTED</div>
+            </div>
+            
+            <div class="device-info">
+                <div class="info-item">
+                    <div class="info-label">Manufacturer</div>
+                    <div id="deviceManufacturer" class="info-value">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Product Name</div>
+                    <div id="deviceProduct" class="info-value">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Serial Number</div>
+                    <div id="deviceSerial" class="info-value">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">USB Version</div>
+                    <div id="deviceVersion" class="info-value">-</div>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-usb" onclick="connectUSB()" id="connectBtn">
-                    <i class="fas fa-plug"></i> Kết nối USB
+            
+            <div id="deviceDetails" style="display: none;">
+                <h3 style="margin-bottom: 15px; color: #a5b4fc;">Device Details:</h3>
+                <pre id="deviceDetailsText" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; overflow-x: auto;"></pre>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-title">
+                <i class="fas fa-sliders-h"></i> Device Controls
+            </div>
+            
+            <div class="button-group">
+                <button id="connectBtn" class="btn btn-primary">
+                    <i class="fas fa-link"></i> Connect Device
                 </button>
-                <button class="btn btn-danger" onclick="disconnectUSB()" id="disconnectBtn" disabled>
-                    <i class="fas fa-power-off"></i> Ngắt kết nối
+                <button id="disconnectBtn" class="btn btn-danger" disabled>
+                    <i class="fas fa-unlink"></i> Disconnect
+                </button>
+                <button id="refreshBtn" class="btn btn-warning">
+                    <i class="fas fa-sync-alt"></i> Refresh Info
                 </button>
             </div>
-        </div>
-
-        <div class="dashboard">
-            <!-- Left Column: USB Connection & Control -->
-            <div>
-                <div class="card">
-                    <h2><i class="fas fa-microchip"></i> Thông tin thiết bị USB</h2>
-                    
-                    <div class="usb-device-info" id="deviceInfo">
-                        <div style="text-align: center; color: #6c757d; padding: 20px;">
-                            <i class="fas fa-usb" style="font-size: 3rem;"></i>
-                            <p>Chưa kết nối với thiết bị USB</p>
-                        </div>
-                    </div>
-
-                    <div class="info-grid" id="deviceDetails" style="display: none;">
-                        <div class="info-item">
-                            <span class="info-label">Vendor ID:</span>
-                            <span class="info-value" id="vidValue">0x0000</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Product ID:</span>
-                            <span class="info-value" id="pidValue">0x0000</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Serial Number:</span>
-                            <span class="info-value" id="serialValue">N/A</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Manufacturer:</span>
-                            <span class="info-value" id="manufacturerValue">N/A</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Product Name:</span>
-                            <span class="info-value" id="productValue">N/A</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">USB Version:</span>
-                            <span class="info-value" id="usbVersion">N/A</span>
-                        </div>
-                    </div>
-
-                    <div class="btn-group">
-                        <button class="btn btn-warning" onclick="refreshUSBDevices()">
-                            <i class="fas fa-sync-alt"></i> Quét USB
-                        </button>
-                        <button class="btn btn-success" onclick="testUSBConnection()" id="testBtn" disabled>
-                            <i class="fas fa-bolt"></i> Test USB
-                        </button>
-                        <button class="btn" onclick="toggleUSBDebug()" style="background: var(--secondary); color: white;">
-                            <i class="fas fa-bug"></i> Debug
-                        </button>
-                    </div>
-                </div>
-
-                <!-- USB Commands -->
-                <div class="card">
-                    <h2><i class="fas fa-terminal"></i> Lệnh điều khiển USB</h2>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="usbCommand" 
-                                   placeholder="Nhập lệnh HEX (VD: 55 AA 01 00 00 00 FE)" 
-                                   style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
-                            <button class="btn btn-primary" onclick="sendUSBCommand()" id="sendBtn" disabled>
-                                <i class="fas fa-paper-plane"></i> Gửi
-                            </button>
-                        </div>
-                        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
-                            <i class="fas fa-info-circle"></i> ZK4500 USB commands thường dùng định dạng HEX
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px; color: var(--primary);">
-                        <i class="fas fa-bolt"></i> Lệnh nhanh
-                    </h3>
-                    <div class="usb-commands">
-                        <div class="command-btn" onclick="sendQuickCommand('GET_INFO')">
-                            <i class="fas fa-info"></i> GET_INFO
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('ENROLL')">
-                            <i class="fas fa-fingerprint"></i> ENROLL
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('IDENTIFY')">
-                            <i class="fas fa-search"></i> IDENTIFY
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('BEEP')">
-                            <i class="fas fa-bell"></i> BEEP
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('LED_ON')">
-                            <i class="fas fa-lightbulb"></i> LED ON
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('LED_OFF')">
-                            <i class="fas fa-lightbulb"></i> LED OFF
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('RESET')">
-                            <i class="fas fa-redo"></i> RESET
-                        </div>
-                        <div class="command-btn" onclick="sendQuickCommand('SLEEP')">
-                            <i class="fas fa-bed"></i> SLEEP
-                        </div>
-                    </div>
-                </div>
+            
+            <div class="button-group">
+                <button id="sendTestBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-paper-plane"></i> Send Test Command
+                </button>
+                <button id="readDataBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-download"></i> Read Data
+                </button>
+                <button id="clearLogBtn" class="btn btn-warning">
+                    <i class="fas fa-trash-alt"></i> Clear Log
+                </button>
             </div>
-
-            <!-- Right Column: Fingerprint Display & Logs -->
-            <div>
-                <div class="card">
-                    <h2><i class="fas fa-fingerprint"></i> Hiển thị vân tay</h2>
-                    
-                    <div class="fingerprint-display">
-                        <canvas id="fingerprintCanvas"></canvas>
-                        <div class="scanner-line" id="scannerLine"></div>
-                        <div class="scanner-overlay" id="scannerOverlay">
-                            <i class="fas fa-fingerprint" style="font-size: 4rem; margin-bottom: 15px; color: var(--usb-color);"></i>
-                            <h3>ĐANG CHỜ KẾT NỐI USB</h3>
-                            <p>Kết nối ZK4500 để bắt đầu quét vân tay</p>
-                        </div>
-                    </div>
-
-                    <div class="info-grid" style="margin-top: 20px;">
-                        <div class="info-item">
-                            <span class="info-label">Chất lượng:</span>
-                            <span class="info-value" id="qualityValue">0%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Điểm đặc trưng:</span>
-                            <span class="info-value" id="minutiaeValue">0</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Lần quét:</span>
-                            <span class="info-value" id="scanCount">0</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Thời gian:</span>
-                            <span class="info-value" id="scanTime">0.0s</span>
-                        </div>
-                    </div>
-
-                    <div class="btn-group">
-                        <button class="btn btn-success" onclick="startFingerprintScan()" id="scanBtn" disabled>
-                            <i class="fas fa-play"></i> Bắt đầu quét
-                        </button>
-                        <button class="btn btn-warning" onclick="simulateFingerprint()">
-                            <i class="fas fa-bolt"></i> Giả lập
-                        </button>
-                        <button class="btn btn-danger" onclick="stopFingerprintScan()" id="stopBtn" disabled>
-                            <i class="fas fa-stop"></i> Dừng quét
-                        </button>
-                    </div>
+            
+            <div style="margin-top: 25px;">
+                <h4 style="margin-bottom: 10px; color: #a5b4fc;">Send Custom Command (Hex):</h4>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="commandInput" placeholder="e.g., 01 02 03 04" 
+                           style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: white;">
+                    <button id="sendCommandBtn" class="btn btn-success" disabled>
+                        <i class="fas fa-play"></i> Send
+                    </button>
                 </div>
-
-                <!-- USB Data Log -->
-                <div class="card">
-                    <h2><i class="fas fa-list-alt"></i> Nhật ký USB</h2>
-                    <div class="data-log" id="dataLog">
-                        <div class="log-entry usb">[USB] Ứng dụng ZK4500 USB Test đã sẵn sàng</div>
-                        <div class="log-entry usb">[USB] Sử dụng WebUSB API để kết nối trực tiếp</div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn" onclick="clearLog()" style="flex: 1; background: #6c757d; color: white;">
-                            <i class="fas fa-trash"></i> Xóa log
-                        </button>
-                        <button class="btn" onclick="exportLog()" style="flex: 1; background: var(--success); color: white;">
-                            <i class="fas fa-download"></i> Xuất log
-                        </button>
-                    </div>
-                </div>
+                <small style="display: block; margin-top: 8px; color: #a5b4fc;">Enter space-separated hex values (00 to FF)</small>
             </div>
         </div>
 
-        <!-- USB Debug Panel -->
-        <div class="card" id="debugPanel" style="display: none;">
-            <h2><i class="fas fa-bug"></i> USB Debug Information</h2>
-            <div class="usb-debug" id="usbDebug">
-                <!-- Debug info will appear here -->
+        <div class="log-panel">
+            <div class="log-header">
+                <div class="log-title">
+                    <i class="fas fa-terminal"></i> Communication Log
+                </div>
+                <div class="log-controls">
+                    <span id="logCount">Logs: 0</span>
+                </div>
             </div>
+            <div id="logContent" class="log-content">
+                <!-- Log entries will appear here -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>ZK4500 USB Connection Tool v1.0 | Compatible with Chrome/Edge 79+ | HTTPS Required</p>
+            <p style="margin-top: 5px;">© 2024 ZK4500 Interface Tool | VID: 0x1B55 PID: 0x0840</p>
         </div>
     </div>
 
-    <!-- Notification -->
     <div id="notification" class="notification"></div>
 
     <script>
-        // ZK4500 USB Connection Manager
-        class ZK4500USBManager {
-            constructor() {
-                this.device = null;
-                this.isConnected = false;
-                this.isScanning = false;
-                this.canvas = null;
-                this.ctx = null;
-                this.scanCount = 0;
-                
-                // ZK4500 USB Vendor IDs
-                this.ZK_VENDOR_IDS = [
-                    0x1A86,  // QinHeng Electronics (CH340)
-                    0x0C40,  // ZKTeco
-                    0x0483,  // STMicroelectronics
-                    0x04E8,  // Samsung
-                    0x067B   // Prolific
-                ];
-                
-                // USB Endpoint configuration
-                this.endpointIn = null;
-                this.endpointOut = null;
-                
-                // Statistics
-                this.stats = {
-                    commandsSent: 0,
-                    dataReceived: 0,
-                    errors: 0,
-                    scanQuality: []
-                };
-                
-                this.init();
-            }
-            
-            init() {
-                // Setup canvas
-                this.canvas = document.getElementById('fingerprintCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.canvas.width = this.canvas.parentElement.clientWidth;
-                this.canvas.height = this.canvas.parentElement.clientHeight;
-                
-                // Draw initial fingerprint pattern
-                this.drawInitialPattern();
-                
-                // Check WebUSB support
-                this.checkWebUSBSupport();
-                
-                // Listen for USB device connect/disconnect
-                navigator.usb.addEventListener('connect', (event) => {
-                    this.logMessage(`USB device connected: ${event.device.productName || 'Unknown'}`, 'usb');
-                });
-                
-                navigator.usb.addEventListener('disconnect', (event) => {
-                    this.logMessage(`USB device disconnected`, 'usb');
-                    if (this.device === event.device) {
-                        this.disconnectUSB();
-                    }
-                });
-            }
-            
-            checkWebUSBSupport() {
-                if (!navigator.usb) {
-                    this.showNotification('Trình duyệt không hỗ trợ WebUSB API', 'error');
-                    this.logMessage('LỖI: Trình duyệt không hỗ trợ WebUSB API', 'error');
-                    document.getElementById('connectBtn').disabled = true;
-                    return false;
-                }
-                return true;
-            }
-            
-            // USB Connection Methods
-            async connectUSB() {
-                try {
-                    this.showNotification('Đang tìm ZK4500 trên USB...', 'usb');
-                    
-                    // Request USB device
-                    this.device = await navigator.usb.requestDevice({
-                        filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
-                    });
-                    
-                    this.logMessage(`Đã chọn thiết bị: ${this.device.productName || 'Unknown'}`, 'usb');
-                    
-                    // Open device
-                    await this.device.open();
-                    
-                    // Select configuration
-                    await this.device.selectConfiguration(1);
-                    
-                    // Claim interface
-                    await this.device.claimInterface(0);
-                    
-                    // Find endpoints
-                    const interfaces = this.device.configuration.interfaces;
-                    for (const iface of interfaces) {
-                        for (const endpoint of iface.alternate.endpoints) {
-                            if (endpoint.direction === 'in') {
-                                this.endpointIn = endpoint;
-                            } else if (endpoint.direction === 'out') {
-                                this.endpointOut = endpoint;
-                            }
-                        }
-                    }
-                    
-                    this.isConnected = true;
-                    this.updateConnectionStatus(true);
-                    this.showDeviceInfo();
-                    
-                    this.showNotification('✅ Đã kết nối USB với ZK4500!', 'success');
-                    this.logMessage('Đã kết nối USB thành công', 'usb');
-                    
-                    // Start listening for data
-                    this.readUSBData();
-                    
-                    // Send initial command
-                    setTimeout(() => {
-                        this.sendUSBControlCommand(0x00, 0x0001);
-                    }, 500);
-                    
-                } catch (error) {
-                    this.showNotification(`Lỗi kết nối USB: ${error.message}`, 'error');
-                    this.logMessage(`Lỗi kết nối: ${error.message}`, 'error');
-                    this.isConnected = false;
-                    this.updateConnectionStatus(false);
-                }
-            }
-            
-            async disconnectUSB() {
-                try {
-                    if (this.device) {
-                        await this.device.close();
-                        this.device = null;
-                    }
-                    
-                    this.isConnected = false;
-                    this.endpointIn = null;
-                    this.endpointOut = null;
-                    
-                    this.updateConnectionStatus(false);
-                    this.clearDeviceInfo();
-                    
-                    this.showNotification('Đã ngắt kết nối USB', 'success');
-                    this.logMessage('Đã ngắt kết nối USB', 'usb');
-                    
-                } catch (error) {
-                    this.showNotification(`Lỗi ngắt kết nối: ${error.message}`, 'error');
-                }
-            }
-            
-            async readUSBData() {
-                try {
-                    while (this.isConnected && this.device && this.endpointIn) {
-                        const result = await this.device.transferIn(this.endpointIn.endpointNumber, 64);
-                        
-                        if (result.data && result.data.byteLength > 0) {
-                            const data = new Uint8Array(result.data.buffer);
-                            this.processUSBData(data);
-                        }
-                    }
-                } catch (error) {
-                    if (error.name !== 'NotFoundError') {
-                        this.logMessage(`Lỗi đọc USB: ${error.message}`, 'error');
-                    }
-                }
-            }
-            
-            processUSBData(data) {
-                this.stats.dataReceived++;
-                
-                // Convert to hex string for display
-                const hexString = Array.from(data)
-                    .map(b => b.toString(16).padStart(2, '0').toUpperCase())
-                    .join(' ');
-                
-                this.logMessage(`USB nhận: ${hexString}`, 'usb');
-                
-                // Check for fingerprint data patterns
-                if (this.isFingerprintData(data)) {
-                    this.handleFingerprintData(data);
-                }
-                
-                // Update debug info
-                this.updateDebugInfo(data);
-            }
-            
-            isFingerprintData(data) {
-                // Check for ZK4500 fingerprint data patterns
-                const header = data[0] === 0x55 && data[1] === 0xAA;
-                const fingerprintMarker = data[2] === 0x02 || data[2] === 0x03;
-                return header && fingerprintMarker;
-            }
-            
-            // USB Command Methods
-            async sendUSBCommand(data) {
-                if (!this.isConnected || !this.device || !this.endpointOut) {
-                    this.showNotification('Chưa kết nối USB', 'error');
-                    return false;
-                }
-                
-                try {
-                    await this.device.transferOut(this.endpointOut.endpointNumber, data);
-                    
-                    this.stats.commandsSent++;
-                    this.logMessage(`USB gửi: ${this.bytesToHex(data)}`, 'usb');
-                    
-                    return true;
-                    
-                } catch (error) {
-                    this.stats.errors++;
-                    this.logMessage(`Lỗi gửi USB: ${error.message}`, 'error');
-                    this.showNotification('Lỗi gửi lệnh USB', 'error');
-                    return false;
-                }
-            }
-            
-            async sendUSBControlCommand(request, value) {
-                if (!this.isConnected || !this.device) {
-                    return false;
-                }
-                
-                try {
-                    await this.device.controlTransferOut({
-                        requestType: 'vendor',
-                        recipient: 'device',
-                        request: request,
-                        value: value,
-                        index: 0
-                    });
-                    
-                    this.logMessage(`Gửi control: request=${request}, value=${value}`, 'usb');
-                    return true;
-                    
-                } catch (error) {
-                    this.logMessage(`Lỗi control: ${error.message}`, 'error');
-                    return false;
-                }
-            }
-            
-            async sendHexCommand(hexString) {
-                const bytes = this.hexToBytes(hexString);
-                return await this.sendUSBCommand(bytes);
-            }
-            
-            // Fingerprint Methods
-            async startFingerprintScan() {
-                if (!this.isConnected) {
-                    this.showNotification('Vui lòng kết nối USB trước', 'error');
-                    return;
-                }
-                
-                this.isScanning = true;
-                this.updateScanControls(true);
-                
-                // Show scanner
-                document.getElementById('scannerOverlay').style.display = 'none';
-                document.getElementById('scannerLine').style.display = 'block';
-                
-                // Send scan command
-                const scanCommand = new Uint8Array([0x55, 0xAA, 0x02, 0x01, 0x00, 0x00, 0xFD]);
-                await this.sendUSBCommand(scanCommand);
-                
-                this.showNotification('Bắt đầu quét vân tay...', 'usb');
-                this.logMessage('Bắt đầu quét vân tay', 'fingerprint');
-                
-                // Start simulation if no device response
-                setTimeout(() => {
-                    if (this.isScanning) {
-                        this.simulateFingerprintResponse();
-                    }
-                }, 2000);
-            }
-            
-            stopFingerprintScan() {
-                this.isScanning = false;
-                this.updateScanControls(false);
-                
-                document.getElementById('scannerOverlay').style.display = 'flex';
-                document.getElementById('scannerLine').style.display = 'none';
-                
-                this.showNotification('Đã dừng quét vân tay', 'success');
-                this.logMessage('Dừng quét vân tay', 'fingerprint');
-            }
-            
-            handleFingerprintData(data) {
-                if (!this.isScanning) return;
-                
-                this.scanCount++;
-                
-                // Calculate quality (simulated)
-                const quality = 70 + Math.random() * 28;
-                const minutiae = 40 + Math.floor(Math.random() * 60);
-                const scanTime = (Math.random() * 0.5 + 0.5).toFixed(1);
-                
-                // Update UI
-                document.getElementById('scanCount').textContent = this.scanCount;
-                document.getElementById('qualityValue').textContent = `${Math.round(quality)}%`;
-                document.getElementById('minutiaeValue').textContent = minutiae;
-                document.getElementById('scanTime').textContent = `${scanTime}s`;
-                
-                // Draw fingerprint
-                this.drawFingerprint(quality);
-                
-                // Add to statistics
-                this.stats.scanQuality.push(quality);
-                
-                this.showNotification(`✅ Đã quét vân tay! Chất lượng: ${Math.round(quality)}%`, 'success');
-                this.logMessage(`Đã quét vân tay - Chất lượng: ${Math.round(quality)}%, Điểm: ${minutiae}`, 'fingerprint');
-            }
-            
-            simulateFingerprintResponse() {
-                if (!this.isScanning) return;
-                
-                // Simulate fingerprint data
-                const simulatedData = new Uint8Array([
-                    0x55, 0xAA, 0x02, 0x01, 
-                    0x50 + Math.floor(Math.random() * 50),
-                    0x30 + Math.floor(Math.random() * 70),
-                    0x00, 0x00, 0x00, 0x00
-                ]);
-                
-                this.handleFingerprintData(simulatedData);
-            }
-            
-            simulateFingerprint() {
-                if (!this.isScanning) {
-                    this.isScanning = true;
-                    document.getElementById('scannerOverlay').style.display = 'none';
-                    document.getElementById('scannerLine').style.display = 'block';
-                }
-                
-                setTimeout(() => {
-                    this.handleFingerprintData(new Uint8Array([0x55, 0xAA, 0x02, 0x01, 0x80, 0x60, 0x00, 0x00]));
-                }, 1500);
-                
-                setTimeout(() => {
-                    this.stopFingerprintScan();
-                }, 3000);
-            }
-            
-            // Drawing Methods
-            drawInitialPattern() {
-                const ctx = this.ctx;
-                const width = this.canvas.width;
-                const height = this.canvas.height;
-                
-                // Dark background
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillRect(0, 0, width, height);
-                
-                // Draw USB icon pattern
-                ctx.fillStyle = 'rgba(121, 80, 242, 0.1)';
-                ctx.font = '100px "Font Awesome 5 Free"';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('', width / 2, height / 2);
-            }
-            
-            drawFingerprint(quality) {
-                const ctx = this.ctx;
-                const width = this.canvas.width;
-                const height = this.canvas.height;
-                
-                // Clear canvas
-                ctx.clearRect(0, 0, width, height);
-                
-                // Dark background
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillRect(0, 0, width, height);
-                
-                // Draw fingerprint based on quality
-                const centerX = width / 2;
-                const centerY = height / 2;
-                const maxRadius = Math.min(width, height) * 0.4;
-                
-                // Draw ridges
-                ctx.strokeStyle = `rgba(67, 97, 238, ${0.3 + quality / 200})`;
-                ctx.lineWidth = 2;
-                
-                for (let i = 0; i < 10; i++) {
-                    const radius = 20 + i * (maxRadius / 10);
-                    
-                    ctx.beginPath();
-                    for (let angle = 0; angle < Math.PI * 2; angle += 0.05) {
-                        const noise = Math.sin(angle * 5 + i) * 5 * (quality / 100);
-                        const x = centerX + (radius + noise) * Math.cos(angle + i * 0.3);
-                        const y = centerY + (radius + noise) * Math.sin(angle + i * 0.3);
-                        
-                        if (angle === 0) {
-                            ctx.moveTo(x, y);
-                        } else {
-                            ctx.lineTo(x, y);
-                        }
-                    }
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-                
-                // Draw minutiae points
-                const pointCount = Math.floor(20 + (quality / 100) * 30);
-                ctx.fillStyle = '#2ec4b6';
-                
-                for (let i = 0; i < pointCount; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = Math.random() * maxRadius * 0.8;
-                    const x = centerX + distance * Math.cos(angle);
-                    const y = centerY + distance * Math.sin(angle);
-                    
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            
-            // UI Update Methods
-            updateConnectionStatus(connected) {
-                const statusDot = document.getElementById('statusDot');
-                const statusText = document.getElementById('statusText');
-                const statusDesc = document.getElementById('statusDescription');
-                const connectBtn = document.getElementById('connectBtn');
-                const disconnectBtn = document.getElementById('disconnectBtn');
-                const scanBtn = document.getElementById('scanBtn');
-                const testBtn = document.getElementById('testBtn');
-                const sendBtn = document.getElementById('sendBtn');
-                
-                if (connected) {
-                    statusDot.className = 'status-dot connected';
-                    statusText.textContent = 'USB ĐÃ KẾT NỐI';
-                    statusDesc.textContent = 'ZK4500 đã sẵn sàng';
-                    connectBtn.disabled = true;
-                    disconnectBtn.disabled = false;
-                    scanBtn.disabled = false;
-                    testBtn.disabled = false;
-                    sendBtn.disabled = false;
-                } else {
-                    statusDot.className = 'status-dot';
-                    statusText.textContent = 'USB CHƯA KẾT NỐI';
-                    statusDesc.textContent = 'Cắm ZK4500 vào cổng USB và nhấn "Kết nối USB"';
-                    connectBtn.disabled = false;
-                    disconnectBtn.disabled = true;
-                    scanBtn.disabled = true;
-                    testBtn.disabled = true;
-                    sendBtn.disabled = true;
-                }
-            }
-            
-            updateScanControls(scanning) {
-                const scanBtn = document.getElementById('scanBtn');
-                const stopBtn = document.getElementById('stopBtn');
-                
-                if (scanning) {
-                    scanBtn.disabled = true;
-                    stopBtn.disabled = false;
-                } else {
-                    scanBtn.disabled = false;
-                    stopBtn.disabled = true;
-                }
-            }
-            
-            showDeviceInfo() {
-                if (!this.device) return;
-                
-                document.getElementById('deviceInfo').style.display = 'none';
-                document.getElementById('deviceDetails').style.display = 'grid';
-                
-                document.getElementById('vidValue').textContent = '0x' + this.device.vendorId.toString(16).toUpperCase().padStart(4, '0');
-                document.getElementById('pidValue').textContent = '0x' + this.device.productId.toString(16).toUpperCase().padStart(4, '0');
-                document.getElementById('serialValue').textContent = this.device.serialNumber || 'N/A';
-                document.getElementById('manufacturerValue').textContent = this.device.manufacturerName || 'N/A';
-                document.getElementById('productValue').textContent = this.device.productName || 'N/A';
-                document.getElementById('usbVersion').textContent = this.device.usbVersionMajor + '.' + this.device.usbVersionMinor;
-            }
-            
-            clearDeviceInfo() {
-                document.getElementById('deviceInfo').style.display = 'block';
-                document.getElementById('deviceDetails').style.display = 'none';
-            }
-            
-            updateDebugInfo(data) {
-                const debugPanel = document.getElementById('usbDebug');
-                const timestamp = new Date().toLocaleTimeString();
-                const hexString = this.bytesToHex(data);
-                
-                const debugEntry = document.createElement('div');
-                debugEntry.textContent = `[${timestamp}] ${hexString}`;
-                debugPanel.appendChild(debugEntry);
-                
-                debugPanel.scrollTop = debugPanel.scrollHeight;
-            }
-            
-            // Utility Methods
-            bytesToHex(bytes) {
-                return Array.from(bytes)
-                    .map(b => b.toString(16).padStart(2, '0').toUpperCase())
-                    .join(' ');
-            }
-            
-            hexToBytes(hexString) {
-                return new Uint8Array(hexString.trim().split(/\s+/).map(h => parseInt(h, 16)));
-            }
-            
-            logMessage(message, type = 'usb') {
-                const logContainer = document.getElementById('dataLog');
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${type}`;
-                
-                const timestamp = new Date().toLocaleTimeString('vi-VN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                
-                entry.textContent = `[${timestamp}] ${message}`;
-                logContainer.appendChild(entry);
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }
-            
-            showNotification(message, type = 'usb') {
-                const notification = document.getElementById('notification');
-                notification.textContent = message;
-                notification.className = `notification notification-${type}`;
-                
-                // Show
-                setTimeout(() => {
-                    notification.classList.add('show');
-                }, 10);
-                
-                // Auto hide
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 3000);
-            }
-            
-            // Test Methods
-            async testUSBConnection() {
-                if (!this.isConnected) return;
-                
-                this.showNotification('Đang test kết nối USB...', 'usb');
-                
-                // Send test command
-                const testCommand = new Uint8Array([0x55, 0xAA, 0x00, 0x00, 0x00, 0x00, 0xFF]);
-                const success = await this.sendUSBCommand(testCommand);
-                
-                if (success) {
-                    setTimeout(() => {
-                        this.showNotification('✅ Kết nối USB ổn định', 'success');
-                    }, 500);
-                }
-            }
-            
-            async refreshUSBDevices() {
-                try {
-                    const devices = await navigator.usb.getDevices();
-                    this.logMessage(`Tìm thấy ${devices.length} thiết bị USB`, 'usb');
-                    
-                    if (devices.length > 0) {
-                        this.showNotification(`Tìm thấy ${devices.length} thiết bị USB`, 'success');
-                    } else {
-                        this.showNotification('Không tìm thấy thiết bị USB nào', 'warning');
-                    }
-                    
-                } catch (error) {
-                    this.showNotification(`Lỗi quét USB: ${error.message}`, 'error');
-                }
-            }
-        }
-        
-        // Global instance
-        let usbManager;
-        
+        // Global variables
+        let device = null;
+        let isConnected = false;
+        let logEntries = [];
+        const VID = 0x1B55;
+        const PID = 0x0840;
+
+        // DOM Elements
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const sendTestBtn = document.getElementById('sendTestBtn');
+        const readDataBtn = document.getElementById('readDataBtn');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const sendCommandBtn = document.getElementById('sendCommandBtn');
+        const commandInput = document.getElementById('commandInput');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const deviceManufacturer = document.getElementById('deviceManufacturer');
+        const deviceProduct = document.getElementById('deviceProduct');
+        const deviceSerial = document.getElementById('deviceSerial');
+        const deviceVersion = document.getElementById('deviceVersion');
+        const deviceDetails = document.getElementById('deviceDetails');
+        const deviceDetailsText = document.getElementById('deviceDetailsText');
+        const logContent = document.getElementById('logContent');
+        const logCount = document.getElementById('logCount');
+        const notification = document.getElementById('notification');
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            usbManager = new ZK4500USBManager();
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            logMessage('System initialized', 'info');
+            logMessage(`Looking for device VID: 0x${VID.toString(16).toUpperCase()} PID: 0x${PID.toString(16).toUpperCase()}`, 'info');
             
-            // Auto-refresh devices on load
-            setTimeout(() => {
-                usbManager.refreshUSBDevices();
-            }, 1000);
-        });
-        
-        // Global functions
-        function connectUSB() {
-            if (usbManager) usbManager.connectUSB();
-        }
-        
-        function disconnectUSB() {
-            if (usbManager) usbManager.disconnectUSB();
-        }
-        
-        function startFingerprintScan() {
-            if (usbManager) usbManager.startFingerprintScan();
-        }
-        
-        function stopFingerprintScan() {
-            if (usbManager) usbManager.stopFingerprintScan();
-        }
-        
-        function simulateFingerprint() {
-            if (usbManager) usbManager.simulateFingerprint();
-        }
-        
-        function sendUSBCommand() {
-            const input = document.getElementById('usbCommand');
-            const command = input.value.trim();
-            
-            if (!command) {
-                usbManager.showNotification('Vui lòng nhập lệnh HEX', 'warning');
+            // Check WebUSB support
+            if (!('usb' in navigator)) {
+                showNotification('WebUSB is not supported in this browser', 'error');
+                logMessage('ERROR: WebUSB API not available', 'error');
+                disableAllControls();
                 return;
             }
             
-            if (usbManager) {
-                usbManager.sendHexCommand(command);
-                input.value = '';
+            logMessage('WebUSB API is available', 'info');
+            
+            // Setup event listeners
+            connectBtn.addEventListener('click', connectDevice);
+            disconnectBtn.addEventListener('click', disconnectDevice);
+            refreshBtn.addEventListener('click', refreshDeviceInfo);
+            sendTestBtn.addEventListener('click', sendTestCommand);
+            readDataBtn.addEventListener('click', readDeviceData);
+            clearLogBtn.addEventListener('click', clearLog);
+            sendCommandBtn.addEventListener('click', sendCustomCommand);
+            
+            // Try to reconnect to previously connected device
+            try {
+                const devices = await navigator.usb.getDevices();
+                if (devices.length > 0) {
+                    device = devices.find(d => 
+                        d.vendorId === VID && d.productId === PID
+                    );
+                    if (device) {
+                        await connectToDevice(device);
+                    }
+                }
+            } catch (error) {
+                logMessage(`Auto-connect error: ${error.message}`, 'warning');
             }
         }
-        
-        function sendQuickCommand(cmd) {
-            const commands = {
-                'GET_INFO': '55 AA 01 00 00 00 FE',
-                'ENROLL': '55 AA 02 01 00 00 FD',
-                'IDENTIFY': '55 AA 02 02 00 00 FC',
-                'BEEP': '55 AA 03 01 00 00 FB',
-                'LED_ON': '55 AA 04 01 00 00 FA',
-                'LED_OFF': '55 AA 04 00 00 00 F9',
-                'RESET': '55 AA 05 00 00 00 F8',
-                'SLEEP': '55 AA 06 00 00 00 F7'
+
+        // Connect to device
+        async function connectDevice() {
+            try {
+                logMessage('Requesting device connection...', 'info');
+                
+                // Request device with our VID/PID filter
+                device = await navigator.usb.requestDevice({
+                    filters: [{ vendorId: VID, productId: PID }]
+                });
+                
+                await connectToDevice(device);
+                
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    showNotification('Device not found. Make sure ZK4500 is connected.', 'error');
+                    logMessage('Device selection cancelled or not found', 'warning');
+                } else {
+                    showNotification(`Connection error: ${error.message}`, 'error');
+                    logMessage(`Connection error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Connect to a specific device
+        async function connectToDevice(selectedDevice) {
+            try {
+                showNotification('Connecting to device...', 'info');
+                logMessage(`Connecting to device: ${selectedDevice.productName || 'Unknown'}`, 'info');
+                
+                await selectedDevice.open();
+                
+                // Select configuration
+                if (selectedDevice.configuration === null) {
+                    await selectedDevice.selectConfiguration(1);
+                }
+                
+                // Claim interface (assuming interface 0)
+                await selectedDevice.claimInterface(0);
+                
+                device = selectedDevice;
+                isConnected = true;
+                
+                updateConnectionStatus(true);
+                updateDeviceInfo();
+                
+                showNotification('Device connected successfully!', 'success');
+                logMessage('Device connected and interface claimed', 'success');
+                
+            } catch (error) {
+                showNotification(`Failed to connect: ${error.message}`, 'error');
+                logMessage(`Connection failed: ${error.message}`, 'error');
+                isConnected = false;
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Disconnect device
+        async function disconnectDevice() {
+            if (!device || !isConnected) return;
+            
+            try {
+                await device.close();
+                showNotification('Device disconnected', 'info');
+                logMessage('Device disconnected', 'info');
+            } catch (error) {
+                logMessage(`Error during disconnect: ${error.message}`, 'warning');
+            }
+            
+            device = null;
+            isConnected = false;
+            updateConnectionStatus(false);
+            clearDeviceInfo();
+        }
+
+        // Update connection status UI
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            
+            if (connected) {
+                connectionStatus.textContent = 'CONNECTED';
+                connectionStatus.className = 'status-badge connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                sendTestBtn.disabled = false;
+                readDataBtn.disabled = false;
+                sendCommandBtn.disabled = false;
+            } else {
+                connectionStatus.textContent = 'DISCONNECTED';
+                connectionStatus.className = 'status-badge disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                sendTestBtn.disabled = true;
+                readDataBtn.disabled = true;
+                sendCommandBtn.disabled = true;
+            }
+        }
+
+        // Update device information
+        async function updateDeviceInfo() {
+            if (!device) return;
+            
+            try {
+                await device.open();
+                
+                deviceManufacturer.textContent = device.manufacturerName || 'Unknown';
+                deviceProduct.textContent = device.productName || 'Unknown';
+                deviceSerial.textContent = device.serialNumber || 'N/A';
+                deviceVersion.textContent = `USB ${device.usbVersionMajor}.${device.usbVersionMinor}`;
+                
+                // Show detailed info
+                deviceDetails.style.display = 'block';
+                const details = {
+                    vendorId: `0x${device.vendorId.toString(16).toUpperCase()}`,
+                    productId: `0x${device.productId.toString(16).toUpperCase()}`,
+                    deviceClass: device.deviceClass,
+                    deviceSubclass: device.deviceSubclass,
+                    deviceProtocol: device.deviceProtocol,
+                    configurations: device.configurations.length,
+                    opened: device.opened,
+                    deviceVersion: `${device.usbVersionMajor}.${device.usbVersionMinor}.${device.usbVersionSubminor}`
+                };
+                deviceDetailsText.textContent = JSON.stringify(details, null, 2);
+                
+                logMessage('Device information updated', 'info');
+                
+            } catch (error) {
+                logMessage(`Failed to update device info: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear device info
+        function clearDeviceInfo() {
+            deviceManufacturer.textContent = '-';
+            deviceProduct.textContent = '-';
+            deviceSerial.textContent = '-';
+            deviceVersion.textContent = '-';
+            deviceDetails.style.display = 'none';
+        }
+
+        // Refresh device info
+        async function refreshDeviceInfo() {
+            if (device && isConnected) {
+                await updateDeviceInfo();
+                showNotification('Device info refreshed', 'info');
+            } else {
+                showNotification('No device connected', 'warning');
+            }
+        }
+
+        // Send test command
+        async function sendTestCommand() {
+            if (!device || !isConnected) {
+                showNotification('Device not connected', 'error');
+                return;
+            }
+            
+            try {
+                // Example: Send a test packet (0x01 0x02 0x03 0x04)
+                const testData = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
+                
+                logMessage(`Sending test command: ${arrayToHex(testData)}`, 'info');
+                
+                // Send to endpoint 1 (OUT endpoint)
+                await device.transferOut(1, testData);
+                
+                showNotification('Test command sent successfully', 'success');
+                logMessage('Test command sent', 'success');
+                
+            } catch (error) {
+                showNotification(`Failed to send command: ${error.message}`, 'error');
+                logMessage(`Command error: ${error.message}`, 'error');
+            }
+        }
+
+        // Read data from device
+        async function readDeviceData() {
+            if (!device || !isConnected) {
+                showNotification('Device not connected', 'error');
+                return;
+            }
+            
+            try {
+                logMessage('Reading data from device...', 'info');
+                
+                // Try to read from endpoint 2 (IN endpoint)
+                const result = await device.transferIn(2, 64);
+                
+                if (result.data && result.data.byteLength > 0) {
+                    const data = new Uint8Array(result.data.buffer);
+                    logMessage(`Received ${data.length} bytes: ${arrayToHex(data)}`, 'data');
+                    showNotification(`Received ${data.length} bytes of data`, 'success');
+                } else {
+                    logMessage('No data received (empty buffer)', 'warning');
+                    showNotification('No data available', 'warning');
+                }
+                
+            } catch (error) {
+                showNotification(`Read error: ${error.message}`, 'error');
+                logMessage(`Read error: ${error.message}`, 'error');
+            }
+        }
+
+        // Send custom command
+        async function sendCustomCommand() {
+            if (!device || !isConnected) {
+                showNotification('Device not connected', 'error');
+                return;
+            }
+            
+            const commandText = commandInput.value.trim();
+            if (!commandText) {
+                showNotification('Please enter a command', 'warning');
+                return;
+            }
+            
+            try {
+                // Parse hex string (format: "01 02 03" or "01,02,03" or "010203")
+                const hexString = commandText.replace(/[^0-9A-Fa-f]/g, '');
+                if (hexString.length % 2 !== 0) {
+                    throw new Error('Invalid hex string length');
+                }
+                
+                const bytes = [];
+                for (let i = 0; i < hexString.length; i += 2) {
+                    bytes.push(parseInt(hexString.substr(i, 2), 16));
+                }
+                
+                const data = new Uint8Array(bytes);
+                logMessage(`Sending custom command: ${arrayToHex(data)}`, 'info');
+                
+                // Send to endpoint 1 (OUT endpoint)
+                await device.transferOut(1, data);
+                
+                showNotification(`Command sent (${data.length} bytes)`, 'success');
+                logMessage('Custom command sent successfully', 'success');
+                
+                // Clear input after successful send
+                commandInput.value = '';
+                
+            } catch (error) {
+                showNotification(`Invalid command format: ${error.message}`, 'error');
+                logMessage(`Command parse error: ${error.message}`, 'error');
+            }
+        }
+
+        // Logging functions
+        function logMessage(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                time: timestamp,
+                message: message,
+                type: type
             };
             
-            if (commands[cmd]) {
-                document.getElementById('usbCommand').value = commands[cmd];
-                sendUSBCommand();
-            }
+            logEntries.push(logEntry);
+            
+            // Update log display
+            const logElement = document.createElement('div');
+            logElement.className = 'log-entry';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = `[${timestamp}]`;
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.className = `log-${type}`;
+            messageSpan.textContent = ` ${message}`;
+            
+            logElement.appendChild(timeSpan);
+            logElement.appendChild(messageSpan);
+            
+            logContent.appendChild(logElement);
+            
+            // Scroll to bottom
+            logContent.scrollTop = logContent.scrollHeight;
+            
+            // Update counter
+            logCount.textContent = `Logs: ${logEntries.length}`;
         }
-        
-        function testUSBConnection() {
-            if (usbManager) usbManager.testUSBConnection();
-        }
-        
-        function refreshUSBDevices() {
-            if (usbManager) usbManager.refreshUSBDevices();
-        }
-        
-        function toggleUSBDebug() {
-            const panel = document.getElementById('debugPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-        
+
         function clearLog() {
-            document.getElementById('dataLog').innerHTML = `
-                <div class="log-entry usb">[${new Date().toLocaleTimeString('vi-VN')}] Đã xóa nhật ký</div>
-            `;
-            usbManager.showNotification('Đã xóa nhật ký', 'success');
+            logEntries = [];
+            logContent.innerHTML = '';
+            logCount.textContent = 'Logs: 0';
+            logMessage('Log cleared', 'info');
         }
-        
-        function exportLog() {
-            const entries = document.querySelectorAll('.log-entry');
-            let logText = 'ZK4500 USB TEST LOG\n';
-            logText += 'Generated: ' + new Date().toLocaleString('vi-VN') + '\n';
-            logText += '='.repeat(50) + '\n\n';
-            
-            entries.forEach(entry => {
-                logText += entry.textContent + '\n';
-            });
-            
-            const blob = new Blob([logText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `zk4500-usb-log-${new Date().toISOString().slice(0,10)}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            usbManager.showNotification('Đã xuất nhật ký', 'success');
+
+        // Helper functions
+        function arrayToHex(array) {
+            return Array.from(array)
+                .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+                .join(' ');
         }
-        
-        // Add scanner animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes scan {
-                0% { top: 0; }
-                100% { top: 100%; }
-            }
+
+        function showNotification(message, type = 'info') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
             
-            .scanner-line {
-                animation: scan 2s linear infinite;
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function disableAllControls() {
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = true;
+            sendTestBtn.disabled = true;
+            readDataBtn.disabled = true;
+            sendCommandBtn.disabled = true;
+        }
+
+        // Add keyboard shortcut for sending command (Ctrl+Enter)
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendCommandBtn.click();
             }
-        `;
-        document.head.appendChild(style);
+        });
     </script>
 </body>
 </html>
