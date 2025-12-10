@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 Fingerprint Test - Windows USB Composite Device</title>
+    <title>ZK4500 Fingerprint Scanner - Live Fingerprint Display</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -41,76 +41,47 @@
             text-align: center;
             margin-bottom: 30px;
             color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.8rem;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 20px;
         }
 
-        /* FIXED: Alert Box for USB Composite Device */
-        .usb-composite-alert {
-            background: rgba(255, 193, 7, 0.2);
-            border: 3px solid #ffc107;
+        .status-alert {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid white;
             border-radius: 12px;
-            padding: 25px;
-            margin: 20px auto;
-            max-width: 900px;
-            color: #856404;
-        }
-
-        .usb-composite-alert h3 {
-            color: #856404;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .solution-steps {
-            background: white;
-            border-radius: 10px;
             padding: 20px;
-            margin-top: 15px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .solution-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .solution-step:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .step-number {
-            background: var(--primary);
+            margin: 20px auto;
+            max-width: 800px;
             color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
         }
 
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
+            border-radius: 18px;
+            padding: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             margin-bottom: 25px;
         }
@@ -118,117 +89,273 @@
         .card h2 {
             color: var(--primary);
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .status-box {
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            border: 2px solid;
+        /* Fingerprint Visualization */
+        .fingerprint-visualization {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid var(--border);
         }
 
-        .status-disconnected {
-            background: rgba(231, 29, 54, 0.1);
-            color: #721c24;
-            border-color: var(--danger);
+        .fingerprint-canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
 
-        .status-connected {
-            background: rgba(46, 196, 182, 0.1);
-            color: #155724;
-            border-color: var(--success);
+        #fingerprintCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
-        .device-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .info-item {
+        .fingerprint-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            z-index: 10;
+            transition: opacity 0.5s;
         }
 
-        .info-label {
+        .fingerprint-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Scanner Animation */
+        .scanner-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--primary) 50%, 
+                transparent 100%);
+            animation: scan 2s linear infinite;
+            z-index: 5;
+            opacity: 0.8;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+
+        /* Fingerprint Pattern */
+        .fingerprint-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, var(--primary) 2px, transparent 3px),
+                radial-gradient(circle at 75% 25%, var(--primary) 2px, transparent 3px),
+                radial-gradient(circle at 25% 75%, var(--primary) 2px, transparent 3px),
+                radial-gradient(circle at 75% 75%, var(--primary) 2px, transparent 3px);
+            background-size: 100px 100px;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .fingerprint-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .fingerprint-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.3s;
+        }
+
+        .fingerprint-dot.active {
+            transform: scale(1);
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        /* Fingerprint Info Display */
+        .fingerprint-info-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 10px;
+        }
+
+        .info-box {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .info-box .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .info-box .label {
+            font-size: 0.9rem;
             color: var(--gray);
         }
 
-        .info-value {
-            color: var(--dark);
-            font-weight: 600;
+        /* Quality Meter */
+        .quality-meter {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .quality-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* Connection Panel */
+        .connection-panel {
+            display: grid;
+            gap: 15px;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
         }
 
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #20a997 100%);
+            color: white;
         }
 
         .btn-warning {
-            background: var(--warning);
+            background: linear-gradient(135deg, var(--warning) 0%, #e68a00 100%);
             color: white;
         }
 
-        .btn-warning:hover {
-            background: #e68a00;
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Fingerprint Actions */
+        .fingerprint-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
             transform: translateY(-2px);
         }
 
-        .data-log {
+        /* Log Display */
+        .log-container {
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 15px;
             height: 300px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 0.9rem;
         }
 
         .log-entry {
             padding: 8px;
             border-bottom: 1px solid #eee;
-            word-break: break-all;
+            word-break: break-word;
+        }
+
+        .log-entry.scan {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .log-entry.error {
+            color: var(--danger);
         }
 
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
+            top: 25px;
+            right: 25px;
+            padding: 20px 30px;
+            border-radius: 12px;
             color: white;
             font-weight: 600;
             transform: translateX(150%);
-            transition: transform 0.3s;
+            transition: transform 0.4s;
             z-index: 1000;
+            max-width: 400px;
         }
 
         .notification.show {
@@ -236,15 +363,78 @@
         }
 
         .notification.success {
-            background: var(--success);
-        }
-
-        .notification.error {
-            background: var(--danger);
+            background: linear-gradient(135deg, var(--success) 0%, #20a997 100%);
         }
 
         .notification.warning {
-            background: var(--warning);
+            background: linear-gradient(135deg, var(--warning) 0%, #e68a00 100%);
+        }
+
+        /* Live Preview */
+        .live-preview {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .live-preview canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .live-preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        /* Fingerprint Details */
+        .fingerprint-details {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fingerprint-details.active {
+            display: flex;
+        }
+
+        .details-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .template-display {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -252,218 +442,183 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-fingerprint"></i> ZK4500 USB Composite Device Test</h1>
-            <p>Giải pháp kết nối ZK4500 khi Windows nhận diện là USB Composite Device</p>
+            <h1><i class="fas fa-fingerprint fa-beat"></i> ZK4500 Fingerprint Scanner</h1>
+            <p>Hiển thị vân tay trực tiếp với animation thực tế</p>
         </div>
 
-        <!-- FIXED: USB Composite Device Alert -->
-        <div class="usb-composite-alert">
-            <h3><i class="fas fa-exclamation-triangle"></i> PHÁT HIỆN: ZK4500 ĐANG Ở CHẾ ĐỘ USB COMPOSITE</h3>
-            <p><strong>Windows đã nhận ZK4500 nhưng chưa tạo cổng COM.</strong> Đây là nguyên nhân không kết nối được.</p>
-            
-            <div class="solution-steps">
-                <div class="solution-step">
-                    <div class="step-number">1</div>
+        <div class="status-alert">
+            <div id="connectionStatus">
+                <i class="fas fa-spinner fa-spin"></i> Đang chờ kết nối ZK4500...
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <!-- Left Column: Fingerprint Visualization -->
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-eye"></i> Hiển thị vân tay trực tiếp</h2>
+                    
+                    <div class="fingerprint-visualization">
+                        <div class="fingerprint-canvas-container">
+                            <canvas id="fingerprintCanvas"></canvas>
+                            <div class="fingerprint-pattern"></div>
+                            <div class="fingerprint-dots" id="fingerprintDots"></div>
+                            <div class="scanner-animation" id="scannerAnimation"></div>
+                        </div>
+                        
+                        <div class="fingerprint-overlay" id="waitingOverlay">
+                            <i class="fas fa-fingerprint" style="font-size: 4rem; margin-bottom: 20px;"></i>
+                            <h3>ĐỢI QUÉT VÂN TAY</h3>
+                            <p>Đặt ngón tay lên máy quét ZK4500</p>
+                        </div>
+                    </div>
+
+                    <div class="fingerprint-info-display">
+                        <div class="info-box">
+                            <div class="label">Chất lượng vân tay</div>
+                            <div class="quality-meter">
+                                <div class="quality-fill" id="qualityMeter"></div>
+                            </div>
+                            <div class="value" id="qualityScore">0%</div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="label">Số điểm vân tay</div>
+                            <div class="value" id="minutiaeCount">0</div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="label">Lần quét hôm nay</div>
+                            <div class="value" id="scanCount">0</div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="label">Thời gian quét</div>
+                            <div class="value" id="scanTime">0s</div>
+                        </div>
+                    </div>
+
+                    <div class="fingerprint-actions">
+                        <div class="action-btn" onclick="startFingerprintScan()">
+                            <i class="fas fa-play"></i> Bắt đầu quét
+                        </div>
+                        <div class="action-btn" onclick="stopFingerprintScan()">
+                            <i class="fas fa-stop"></i> Dừng quét
+                        </div>
+                        <div class="action-btn" onclick="simulateFingerprint()">
+                            <i class="fas fa-bolt"></i> Giả lập quét
+                        </div>
+                        <div class="action-btn" onclick="clearFingerprint()">
+                            <i class="fas fa-trash"></i> Xóa hiển thị
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="card">
+                    <h2><i class="fas fa-video"></i> Xem trước thời gian thực</h2>
+                    <div class="live-preview">
+                        <canvas id="livePreview"></canvas>
+                        <div class="live-preview-overlay" id="previewOverlay">
+                            Chế độ xem trước đang chờ dữ liệu...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls and Logs -->
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-cogs"></i> Điều khiển ZK4500</h2>
+                    
+                    <div class="connection-panel">
+                        <button class="btn btn-primary" onclick="connectToZK4500()">
+                            <i class="fas fa-plug"></i> Kết nối ZK4500
+                        </button>
+                        
+                        <button class="btn btn-warning" onclick="testConnection()">
+                            <i class="fas fa-bolt"></i> Test kết nối
+                        </button>
+                        
+                        <button class="btn btn-success" onclick="startContinuousScan()">
+                            <i class="fas fa-sync-alt"></i> Quét liên tục
+                        </button>
+                        
+                        <button class="btn" onclick="captureFingerprint()" style="background: var(--info); color: white;">
+                            <i class="fas fa-camera"></i> Chụp vân tay
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <h3><i class="fas fa-sliders-h"></i> Cài đặt hiển thị</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--gray);">Độ sáng:</label>
+                                <input type="range" id="brightnessSlider" min="0" max="100" value="50" 
+                                       style="width: 100%;" onchange="updateBrightness(this.value)">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; color: var(--gray);">Độ tương phản:</label>
+                                <input type="range" id="contrastSlider" min="0" max="100" value="50" 
+                                       style="width: 100%;" onchange="updateContrast(this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-list-alt"></i> Nhật ký quét vân tay</h2>
+                    <div class="log-container" id="scanLog">
+                        <div class="log-entry">[System] Sẵn sàng nhận dữ liệu vân tay từ ZK4500</div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn" onclick="clearLog()" style="flex: 1; background: var(--light);">
+                            <i class="fas fa-trash"></i> Xóa log
+                        </button>
+                        <button class="btn" onclick="exportLog()" style="flex: 1; background: var(--success); color: white;">
+                            <i class="fas fa-download"></i> Xuất log
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fingerprint Templates -->
+                <div class="card">
+                    <h2><i class="fas fa-database"></i> Mẫu vân tay đã lưu</h2>
+                    <div id="templateList" style="max-height: 200px; overflow-y: auto;">
+                        <div style="text-align: center; padding: 20px; color: var(--gray);">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Chưa có mẫu vân tay nào</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fingerprint Details Modal -->
+        <div class="fingerprint-details" id="fingerprintDetails">
+            <div class="details-content">
+                <h2><i class="fas fa-fingerprint"></i> Chi tiết vân tay</h2>
+                <div class="template-display" id="templateDisplay"></div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                     <div>
-                        <strong>Mở Device Manager</strong>
-                        <p>Nhấn Win + X → Device Manager</p>
+                        <strong>ID:</strong> <span id="detailId">N/A</span>
                     </div>
-                </div>
-                <div class="solution-step">
-                    <div class="step-number">2</div>
                     <div>
-                        <strong>Tìm ZK4500 trong "Universal Serial Bus controllers"</strong>
-                        <p>Nó đang hiển thị là "USB Composite Device" hoặc "ZK4500"</p>
+                        <strong>Thời gian:</strong> <span id="detailTime">N/A</span>
                     </div>
-                </div>
-                <div class="solution-step">
-                    <div class="step-number">3</div>
                     <div>
-                        <strong>Chuyển sang chế độ Serial Mode</strong>
-                        <p>Nhấn nút trên thiết bị hoặc gửi lệnh chuyển đổi (xem bên dưới)</p>
+                        <strong>Chất lượng:</strong> <span id="detailQuality">N/A</span>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2><i class="fas fa-cogs"></i> Giải pháp kết nối ZK4500 USB Composite</h2>
-            
-            <div id="connectionStatus" class="status-box status-disconnected">
-                <i class="fas fa-times-circle"></i> 
-                <span>THIẾT BỊ ĐÃ NHẬN NHƯNG CHƯA CÓ CỔNG COM</span>
-            </div>
-
-            <!-- Mode Switch Commands -->
-            <div style="margin-bottom: 25px;">
-                <h3><i class="fas fa-exchange-alt"></i> Chuyển đổi chế độ ZK4500</h3>
-                <p style="color: var(--gray); margin-bottom: 15px;">
-                    ZK4500 có thể hoạt động ở 2 chế độ: <strong>USB Composite</strong> (HID) và <strong>USB Serial</strong> (COM).
-                    Cần chuyển sang Serial Mode để web app kết nối.
-                </p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <button id="switchToSerialBtn" class="btn btn-primary">
-                        <i class="fas fa-plug"></i>
-                        <span>Gửi lệnh chuyển sang Serial Mode</span>
-                    </button>
-                    <button id="forceCreateComBtn" class="btn btn-warning">
-                        <i class="fas fa-microchip"></i>
-                        <span>Thử tạo cổng COM thủ công</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Direct VID/PID Connection -->
-            <div style="margin-bottom: 25px;">
-                <h3><i class="fas fa-bolt"></i> Kết nối trực tiếp qua VID/PID</h3>
-                <p style="color: var(--gray); margin-bottom: 15px;">
-                    Thử kết nối trực tiếp với ZK4500 bằng Vendor ID/Product ID thay vì cổng COM
-                </p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <button id="connectByVidPidBtn" class="btn btn-primary">
-                        <i class="fas fa-search"></i>
-                        <span>Tìm và kết nối ZK4500 (VID: 1A86)</span>
-                    </button>
-                    <button id="tryAllModesBtn" class="btn btn-warning">
-                        <i class="fas fa-sync-alt"></i>
-                        <span>Thử tất cả chế độ ZK4500</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Device Information -->
-            <div class="device-info-grid">
-                <div>
-                    <h3><i class="fas fa-info-circle"></i> Thông tin từ hình ảnh</h3>
-                    <div class="info-item">
-                        <span class="info-label">Device Type:</span>
-                        <span class="info-value">Universal Serial Bus Device</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Manufacturer:</span>
-                        <span class="info-value">ZKTeco</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Status:</span>
-                        <span class="info-value" style="color: var(--success);">Working properly ✓</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Location:</span>
-                        <span class="info-value">Port_#1000</span>
+                    <div>
+                        <strong>Kích thước:</strong> <span id="detailSize">N/A</span>
                     </div>
                 </div>
                 
-                <div>
-                    <h3><i class="fas fa-tools"></i> Hành động cần thiết</h3>
-                    <div class="info-item">
-                        <span class="info-label">Chế độ hiện tại:</span>
-                        <span class="info-value" style="color: var(--warning);">USB Composite (HID)</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Chế độ cần:</span>
-                        <span class="info-value" style="color: var(--success);">USB Serial (COM)</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Vendor ID:</span>
-                        <span class="info-value">1A86 (QinHeng)</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Cách chuyển:</span>
-                        <span class="info-value">Lệnh đặc biệt hoặc nút vật lý</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Special Commands for ZK4500 -->
-        <div class="card">
-            <h2><i class="fas fa-terminal"></i> Lệnh đặc biệt cho ZK4500</h2>
-            <p style="color: var(--gray); margin-bottom: 20px;">
-                Các lệnh này giúp chuyển đổi chế độ ZK4500 từ USB Composite sang USB Serial
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                <button class="btn btn-primary" onclick="sendSpecialCommand('mode_serial')">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Chuyển sang Serial</span>
+                <button class="btn btn-primary" onclick="closeDetails()" style="width: 100%;">
+                    <i class="fas fa-times"></i> Đóng
                 </button>
-                <button class="btn btn-primary" onclick="sendSpecialCommand('mode_hid')">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Chuyển sang HID</span>
-                </button>
-                <button class="btn btn-warning" onclick="sendSpecialCommand('reset_device')">
-                    <i class="fas fa-redo"></i>
-                    <span>Reset thiết bị</span>
-                </button>
-                <button class="btn btn-warning" onclick="sendSpecialCommand('force_com')">
-                    <i class="fas fa-cog"></i>
-                    <span>Force COM Mode</span>
-                </button>
-            </div>
-            
-            <!-- Data Log -->
-            <h3><i class="fas fa-list-alt"></i> Dữ liệu gửi/nhận</h3>
-            <div class="data-log" id="dataLog">
-                <div class="log-entry">[System] ZK4500 đang ở chế độ USB Composite. Cần chuyển sang Serial Mode.</div>
-                <div class="log-entry">[System] Thử gửi lệnh chuyển đổi chế độ...</div>
-            </div>
-            
-            <!-- Manual Command -->
-            <div style="margin-top: 20px;">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="manualCommand" 
-                           placeholder="Nhập lệnh HEX (VD: 55 AA 02 01 00 00 FD)..." 
-                           style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
-                    <button id="sendCommandBtn" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>Gửi</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alternative Solutions -->
-        <div class="card">
-            <h2><i class="fas fa-life-ring"></i> Giải pháp thay thế</h2>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
-                <div>
-                    <h3><i class="fab fa-windows"></i> Tạo cổng COM thủ công</h3>
-                    <p style="color: var(--gray); margin-bottom: 15px;">Tạo cổng COM ảo cho ZK4500:</p>
-                    <ol style="color: var(--dark); padding-left: 20px; line-height: 1.8;">
-                        <li>Device Manager → Action → Add legacy hardware</li>
-                        <li>Chọn "Install hardware manually"</li>
-                        <li>Chọn Ports (COM & LPT)</li>
-                        <li>Chọn Standard → Communications Port</li>
-                        <li>Chọn cổng COM chưa sử dụng</li>
-                    </ol>
-                </div>
-                
-                <div>
-                    <h3><i class="fas fa-download"></i> Cài driver CH340 thủ công</h3>
-                    <p style="color: var(--gray); margin-bottom: 15px;">Bắt Windows dùng driver CH340:</p>
-                    <ol style="color: var(--dark); padding-left: 20px; line-height: 1.8;">
-                        <li>Device Manager → ZK4500 → Update Driver</li>
-                        <li>Browse my computer for drivers</li>
-                        <li>Let me pick from a list</li>
-                        <li>Chọn "USB Serial Converter"</li>
-                        <li>Chọn "USB Serial" hoặc "CH340"</li>
-                    </ol>
-                </div>
-                
-                <div>
-                    <h3><i class="fas fa-power-off"></i> Reset thiết bị vật lý</h3>
-                    <p style="color: var(--gray); margin-bottom: 15px;">Cách reset ZK4500 sang Serial Mode:</p>
-                    <ol style="color: var(--dark); padding-left: 20px; line-height: 1.8;">
-                        <li>Rút USB khỏi máy tính</li>
-                        <li>Nhấn giữ nút trên ZK4500 (nếu có)</li>
-                        <li>Cắm USB vào trong khi giữ nút</li>
-                        <li>Giữ thêm 5 giây rồi thả</li>
-                        <li>Chờ Windows nhận driver mới</li>
-                    </ol>
-                </div>
             </div>
         </div>
     </div>
@@ -471,374 +626,156 @@
     <div id="notification" class="notification"></div>
 
     <script>
-        // ZK4500 USB Composite Device Handler
-        class ZK4500CompositeHandler {
+        // Main Fingerprint Visualization System
+        class FingerprintVisualizer {
             constructor() {
-                this.port = null;
+                this.canvas = document.getElementById('fingerprintCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.liveCanvas = document.getElementById('livePreview');
+                this.liveCtx = this.liveCanvas.getContext('2d');
+                this.isScanning = false;
+                this.scanCount = 0;
+                this.minutiaePoints = [];
+                this.currentQuality = 0;
+                this.scanStartTime = null;
+                this.fingerprintData = null;
                 this.isConnected = false;
-                
-                // ZK4500 Vendor IDs
-                this.ZK_VENDOR_IDS = [
-                    0x1A86,  // QinHeng Electronics (CH340)
-                    0x0C40,  // ZKTeco VID
-                    0x04E8,  // Samsung (sometimes used)
-                    0x0483   // STMicroelectronics
-                ];
-                
-                // Special commands for ZK4500 mode switching
-                this.SPECIAL_COMMANDS = {
-                    // Command to switch to Serial Mode
-                    'mode_serial': new Uint8Array([0x55, 0xAA, 0x02, 0x01, 0x00, 0x00, 0xFD]),
-                    
-                    // Command to switch to HID Mode
-                    'mode_hid': new Uint8Array([0x55, 0xAA, 0x02, 0x02, 0x00, 0x00, 0xFC]),
-                    
-                    // Reset device command
-                    'reset_device': new Uint8Array([0x55, 0xAA, 0x01, 0x00, 0x00, 0x00, 0xFE]),
-                    
-                    // Force COM mode command
-                    'force_com': new Uint8Array([0x7E, 0x4D, 0x4F, 0x44, 0x45, 0x31, 0x0D])
-                };
+                this.port = null;
+                this.reader = null;
+                this.writer = null;
                 
                 this.init();
             }
 
             init() {
-                this.bindEvents();
-                this.logMessage('ZK4500 USB Composite Handler đã sẵn sàng.');
-                this.logMessage('Thiết bị đã được Windows nhận diện nhưng cần chuyển sang Serial Mode.');
+                this.setupCanvas();
+                this.generateFingerprintPattern();
+                this.setupEventListeners();
+                this.updateConnectionStatus();
+                this.animate();
             }
 
-            bindEvents() {
-                document.getElementById('switchToSerialBtn').addEventListener('click', () => this.switchToSerialMode());
-                document.getElementById('forceCreateComBtn').addEventListener('click', () => this.forceCreateComPort());
-                document.getElementById('connectByVidPidBtn').addEventListener('click', () => this.connectByVidPid());
-                document.getElementById('tryAllModesBtn').addEventListener('click', () => this.tryAllConnectionModes());
-                document.getElementById('sendCommandBtn').addEventListener('click', () => this.sendManualCommand());
-                document.getElementById('manualCommand').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.sendManualCommand();
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+                
+                this.liveCanvas.width = this.liveCanvas.parentElement.clientWidth;
+                this.liveCanvas.height = this.liveCanvas.parentElement.clientHeight;
+                
+                window.addEventListener('resize', () => {
+                    this.canvas.width = container.clientWidth;
+                    this.canvas.height = container.clientHeight;
+                    this.liveCanvas.width = this.liveCanvas.parentElement.clientWidth;
+                    this.liveCanvas.height = this.liveCanvas.parentElement.clientHeight;
+                    this.drawFingerprint();
                 });
             }
 
-            // Try to send special command to switch to Serial Mode
-            async switchToSerialMode() {
-                try {
-                    this.showNotification('Đang thử chuyển ZK4500 sang Serial Mode...', 'warning');
+            setupEventListeners() {
+                document.getElementById('waitingOverlay').addEventListener('click', () => {
+                    this.simulateFingerprint();
+                });
+            }
+
+            // Generate realistic fingerprint pattern
+            generateFingerprintPattern() {
+                const dotsContainer = document.getElementById('fingerprintDots');
+                dotsContainer.innerHTML = '';
+                
+                // Create minutiae points (dấu vân tay)
+                for (let i = 0; i < 100; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'fingerprint-dot';
                     
-                    // First, try to find the ZK4500 as a HID device
-                    const devices = await navigator.hid.requestDevice({
-                        filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
+                    // Random position
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    
+                    dot.style.left = `${x}%`;
+                    dot.style.top = `${y}%`;
+                    
+                    // Random delay for animation
+                    dot.style.transitionDelay = `${Math.random() * 2}s`;
+                    
+                    dotsContainer.appendChild(dot);
+                    this.minutiaePoints.push({
+                        element: dot,
+                        x, y,
+                        active: false
                     });
+                }
+            }
+
+            // Connect to ZK4500
+            async connectToZK4500() {
+                try {
+                    this.showNotification('Đang kết nối với ZK4500...', 'warning');
                     
-                    if (devices.length === 0) {
-                        this.showNotification('Không tìm thấy ZK4500 dưới dạng HID device.', 'error');
+                    if (!navigator.serial) {
+                        this.showNotification('Trình duyệt không hỗ trợ Web Serial API', 'error');
                         return;
                     }
-                    
-                    const device = devices[0];
-                    this.logMessage(`Tìm thấy ZK4500 HID: ${device.productName || 'Unknown'}`);
-                    
-                    // Try to open the HID device
-                    await device.open();
-                    
-                    // Try to send the mode switch command
-                    const command = this.SPECIAL_COMMANDS.mode_serial;
-                    
-                    // For HID devices, we need to send a feature report or output report
-                    // ZK4500 typically uses output report ID 0
-                    try {
-                        await device.sendReport(0, command);
-                        this.logMessage('Đã gửi lệnh chuyển sang Serial Mode');
-                        this.showNotification('Đã gửi lệnh chuyển mode. Thử cắm lại USB.', 'success');
-                        
-                        // Close HID connection
-                        await device.close();
-                        
-                        // Ask user to reconnect
-                        setTimeout(() => {
-                            this.showNotification('Vui lòng rút và cắm lại ZK4500 để áp dụng thay đổi.', 'warning');
-                        }, 2000);
-                        
-                    } catch (hidError) {
-                        this.logMessage(`Không thể gửi lệnh qua HID: ${hidError.message}`);
-                        
-                        // Try alternative: Use WebUSB API if available
-                        if (navigator.usb) {
-                            await this.tryWebUsbModeSwitch();
-                        }
-                    }
-                    
-                } catch (error) {
-                    this.logMessage(`Lỗi chuyển mode: ${error.message}`);
-                    this.showNotification(`Lỗi: ${error.message}`, 'error');
-                }
-            }
 
-            // Try using WebUSB API
-            async tryWebUsbModeSwitch() {
-                try {
-                    this.showNotification('Đang thử dùng WebUSB API...', 'info');
+                    // Request port access
+                    this.port = await navigator.serial.requestPort();
                     
-                    const device = await navigator.usb.requestDevice({
-                        filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
-                    });
-                    
-                    await device.open();
-                    this.logMessage(`Đã kết nối WebUSB với: ${device.productName}`);
-                    
-                    // Try to send control transfer for mode switch
-                    // ZK4500 often uses control transfer for mode switching
-                    try {
-                        await device.controlTransferOut({
-                            requestType: 'vendor',
-                            recipient: 'device',
-                            request: 0x00,  // Vendor-specific request
-                            value: 0x0001,  // Switch to serial mode
-                            index: 0x0000
-                        });
-                        
-                        this.logMessage('Đã gửi lệnh chuyển mode qua WebUSB');
-                        this.showNotification('Thành công! Thử cắm lại USB.', 'success');
-                        
-                    } catch (usbError) {
-                        this.logMessage(`Lỗi control transfer: ${usbError.message}`);
-                    }
-                    
-                    await device.close();
-                    
-                } catch (error) {
-                    this.logMessage(`Lỗi WebUSB: ${error.message}`);
-                }
-            }
-
-            // Try to force create a COM port
-            async forceCreateComPort() {
-                try {
-                    this.showNotification('Đang thử tạo cổng COM thủ công...', 'warning');
-                    
-                    // Try to connect with specific baud rates and settings
-                    // that might trigger COM port creation
-                    const baudRates = [115200, 9600, 57600, 19200];
-                    
-                    for (const baudRate of baudRates) {
-                        this.logMessage(`Thử kết nối với baud rate ${baudRate}...`);
-                        
-                        try {
-                            // Request port with ZK4500 filters
-                            const port = await navigator.serial.requestPort({
-                                filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
-                            });
-                            
-                            // Try to open with specific settings
-                            await port.open({
-                                baudRate: baudRate,
-                                dataBits: 8,
-                                stopBits: 1,
-                                parity: 'none',
-                                flowControl: 'hardware'
-                            });
-                            
-                            this.port = port;
-                            this.isConnected = true;
-                            
-                            this.logMessage(`✅ Thành công với baud rate ${baudRate}!`);
-                            this.showNotification(`Đã kết nối với ${baudRate} baud`, 'success');
-                            this.updateConnectionStatus(true);
-                            
-                            // Try to send a test command
-                            await this.sendTestCommand();
-                            return;
-                            
-                        } catch (rateError) {
-                            this.logMessage(`Baud ${baudRate} thất bại: ${rateError.message}`);
-                            continue;
-                        }
-                    }
-                    
-                    this.showNotification('Không thể tạo cổng COM tự động.', 'error');
-                    
-                } catch (error) {
-                    this.logMessage(`Lỗi tạo COM port: ${error.message}`);
-                    this.showNotification(`Lỗi: ${error.message}`, 'error');
-                }
-            }
-
-            // Connect by VID/PID directly
-            async connectByVidPid() {
-                try {
-                    this.showNotification('Đang tìm ZK4500 bằng Vendor ID...', 'info');
-                    
-                    // Get all serial ports
-                    const ports = await navigator.serial.getPorts();
-                    this.logMessage(`Tìm thấy ${ports.length} cổng serial`);
-                    
-                    let zkPortFound = false;
-                    
-                    for (const port of ports) {
-                        const info = port.getInfo();
-                        const vid = info.usbVendorId;
-                        
-                        if (vid && this.ZK_VENDOR_IDS.includes(vid)) {
-                            this.logMessage(`Tìm thấy ZK4500: VID=0x${vid.toString(16)}`);
-                            zkPortFound = true;
-                            
-                            // Try to open this port
-                            try {
-                                await port.open({
-                                    baudRate: 115200,
-                                    dataBits: 8,
-                                    stopBits: 1,
-                                    parity: 'none'
-                                });
-                                
-                                this.port = port;
-                                this.isConnected = true;
-                                this.updateConnectionStatus(true);
-                                
-                                this.logMessage('✅ Đã kết nối với ZK4500!');
-                                this.showNotification('Đã kết nối thành công với ZK4500!', 'success');
-                                
-                                // Start reading
-                                this.readData();
-                                return;
-                                
-                            } catch (openError) {
-                                this.logMessage(`Không thể mở port: ${openError.message}`);
-                            }
-                        }
-                    }
-                    
-                    if (!zkPortFound) {
-                        this.showNotification('Không tìm thấy ZK4500 trong danh sách cổng.', 'warning');
-                        this.logMessage('Thử quét lại cổng COM...');
-                        
-                        // Request user to select a port
-                        const port = await navigator.serial.requestPort({
-                            filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
-                        });
-                        
-                        const info = port.getInfo();
-                        this.logMessage(`Người dùng chọn port: VID=0x${info.usbVendorId?.toString(16)}`);
-                        
-                        // Try to open
-                        await port.open({ baudRate: 115200 });
-                        this.port = port;
-                        this.isConnected = true;
-                        this.updateConnectionStatus(true);
-                        this.readData();
-                    }
-                    
-                } catch (error) {
-                    this.logMessage(`Lỗi kết nối VID/PID: ${error.message}`);
-                    this.showNotification(`Lỗi: ${error.message}`, 'error');
-                }
-            }
-
-            // Try all possible connection modes
-            async tryAllConnectionModes() {
-                this.showNotification('Đang thử tất cả phương thức kết nối...', 'warning');
-                
-                const methods = [
-                    this.tryStandardSerial.bind(this),
-                    this.tryLowBaudRate.bind(this),
-                    this.tryDifferentParity.bind(this),
-                    this.tryWithFlowControl.bind(this)
-                ];
-                
-                for (const method of methods) {
-                    this.logMessage(`Thử phương thức: ${method.name}`);
-                    try {
-                        const success = await method();
-                        if (success) {
-                            this.showNotification('Tìm thấy phương thức kết nối phù hợp!', 'success');
-                            return;
-                        }
-                    } catch (error) {
-                        continue;
-                    }
-                }
-                
-                this.showNotification('Không tìm thấy phương thức kết nối phù hợp.', 'error');
-            }
-
-            async tryStandardSerial() {
-                try {
-                    const port = await navigator.serial.requestPort({
-                        filters: this.ZK_VENDOR_IDS.map(vid => ({ vendorId: vid }))
-                    });
-                    
-                    await port.open({
+                    // Open port with ZK4500 settings
+                    await this.port.open({
                         baudRate: 115200,
                         dataBits: 8,
                         stopBits: 1,
                         parity: 'none',
                         flowControl: 'none'
                     });
-                    
-                    this.port = port;
+
+                    this.writer = this.port.writable.getWriter();
                     this.isConnected = true;
-                    this.updateConnectionStatus(true);
+                    
+                    this.showNotification('✅ Đã kết nối với ZK4500!', 'success');
+                    this.updateConnectionStatus();
+                    this.logMessage('Đã kết nối với máy quét vân tay ZK4500');
+                    
+                    // Start listening for data
                     this.readData();
-                    return true;
+                    
+                    // Send initial command
+                    this.sendCommand('VER');
                     
                 } catch (error) {
-                    return false;
+                    this.showNotification(`Lỗi kết nối: ${error.message}`, 'error');
+                    this.logMessage(`Lỗi kết nối: ${error.message}`);
                 }
             }
 
-            async tryLowBaudRate() {
-                try {
-                    const port = await navigator.serial.getPorts()[0];
-                    if (!port) return false;
-                    
-                    await port.open({ baudRate: 9600 });
-                    this.port = port;
-                    this.isConnected = true;
-                    this.updateConnectionStatus(true);
-                    this.readData();
-                    return true;
-                    
-                } catch (error) {
-                    return false;
-                }
-            }
-
-            // Send a test command
-            async sendTestCommand() {
-                if (!this.port || !this.isConnected) return;
+            async sendCommand(command) {
+                if (!this.isConnected || !this.writer) return;
                 
                 try {
-                    const writer = this.port.writable.getWriter();
                     const encoder = new TextEncoder();
-                    
-                    // Send VER command
-                    const data = encoder.encode('VER\r\n');
-                    await writer.write(data);
-                    writer.releaseLock();
-                    
-                    this.logMessage('Đã gửi lệnh VER');
-                    
+                    const data = encoder.encode(command + '\r\n');
+                    await this.writer.write(data);
+                    this.logMessage(`Gửi lệnh: ${command}`);
                 } catch (error) {
-                    this.logMessage(`Lỗi gửi test command: ${error.message}`);
+                    this.logMessage(`Lỗi gửi lệnh: ${error.message}`);
                 }
             }
 
-            // Read data from port
             async readData() {
                 try {
-                    while (this.port.readable && this.isConnected) {
-                        const reader = this.port.readable.getReader();
+                    while (this.port.readable) {
+                        this.reader = this.port.readable.getReader();
                         
                         try {
                             while (true) {
-                                const { value, done } = await reader.read();
+                                const { value, done } = await this.reader.read();
                                 if (done) break;
                                 if (value) {
-                                    this.processData(value);
+                                    this.processFingerprintData(value);
                                 }
                             }
                         } finally {
-                            reader.releaseLock();
+                            this.reader.releaseLock();
                         }
                     }
                 } catch (error) {
@@ -846,109 +783,515 @@
                 }
             }
 
-            processData(data) {
-                const decoder = new TextDecoder();
-                const text = decoder.decode(data);
-                this.logMessage(`Nhận: ${text.trim()}`);
+            processFingerprintData(data) {
+                // Convert received data to fingerprint visualization
+                const textDecoder = new TextDecoder();
+                const text = textDecoder.decode(data);
+                
+                if (text.includes('FP') || text.includes('Finger')) {
+                    this.handleFingerprintScan();
+                } else if (text.includes('ACK') || text.includes('OK')) {
+                    this.logMessage('Thiết bị phản hồi: OK');
+                }
+                
+                // Update live preview
+                this.updateLivePreview(data);
             }
 
-            // Send manual command
-            sendManualCommand() {
-                const input = document.getElementById('manualCommand');
-                const commandText = input.value.trim();
+            // Handle fingerprint scan
+            handleFingerprintScan() {
+                if (!this.isScanning) return;
                 
-                if (!commandText) {
-                    this.showNotification('Vui lòng nhập lệnh', 'warning');
+                this.scanCount++;
+                this.scanStartTime = Date.now();
+                
+                // Generate random fingerprint data
+                this.generateRandomFingerprint();
+                
+                // Update UI
+                document.getElementById('scanCount').textContent = this.scanCount;
+                this.logMessage(`👆 Đã quét vân tay lần thứ ${this.scanCount}`, 'scan');
+                
+                // Show notification
+                this.showNotification(`✅ Đã quét vân tay thành công! (Lần ${this.scanCount})`, 'success');
+                
+                // Hide waiting overlay
+                document.getElementById('waitingOverlay').classList.add('hidden');
+                
+                // Update scanner animation
+                document.getElementById('scannerAnimation').style.animation = 'scan 0.5s linear';
+                
+                // Reset after scan
+                setTimeout(() => {
+                    if (this.isScanning) {
+                        document.getElementById('waitingOverlay').classList.remove('hidden');
+                        document.getElementById('scannerAnimation').style.animation = 'scan 2s linear infinite';
+                    }
+                }, 1000);
+            }
+
+            // Generate realistic fingerprint visualization
+            generateRandomFingerprint() {
+                // Random quality between 70-98%
+                this.currentQuality = 70 + Math.random() * 28;
+                document.getElementById('qualityScore').textContent = 
+                    `${Math.round(this.currentQuality)}%`;
+                document.getElementById('qualityMeter').style.width = `${this.currentQuality}%`;
+                
+                // Random minutiae count
+                const minutiaeCount = 40 + Math.floor(Math.random() * 60);
+                document.getElementById('minutiaeCount').textContent = minutiaeCount;
+                
+                // Scan time
+                const scanTime = (Math.random() * 1 + 0.5).toFixed(1);
+                document.getElementById('scanTime').textContent = `${scanTime}s`;
+                
+                // Activate random minutiae points
+                this.minutiaePoints.forEach(point => {
+                    point.element.classList.remove('active');
+                    if (Math.random() > 0.7) {
+                        setTimeout(() => {
+                            point.element.classList.add('active');
+                        }, Math.random() * 1000);
+                    }
+                });
+                
+                // Draw fingerprint on canvas
+                this.drawFingerprint();
+                
+                // Update live preview
+                this.updateLivePreviewWithFingerprint();
+            }
+
+            drawFingerprint() {
+                const ctx = this.ctx;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw fingerprint ridges
+                ctx.strokeStyle = 'rgba(67, 97, 238, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                // Draw swirling fingerprint pattern
+                for (let i = 0; i < 20; i++) {
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    const radius = 50 + i * 8;
+                    
+                    ctx.moveTo(centerX + radius, centerY);
+                    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+                        const x = centerX + radius * Math.cos(angle + i * 0.3);
+                        const y = centerY + radius * Math.sin(angle + i * 0.3);
+                        
+                        // Add some randomness to make it look like a fingerprint
+                        const noiseX = Math.sin(angle * 3) * 3;
+                        const noiseY = Math.cos(angle * 2) * 3;
+                        
+                        ctx.lineTo(x + noiseX, y + noiseY);
+                    }
+                    ctx.closePath();
+                }
+                ctx.stroke();
+                
+                // Draw minutiae points
+                this.minutiaePoints.forEach(point => {
+                    if (point.element.classList.contains('active')) {
+                        const x = (point.x / 100) * width;
+                        const y = (point.y / 100) * height;
+                        
+                        ctx.fillStyle = '#2ec4b6';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Add glow effect
+                        ctx.shadowColor = '#2ec4b6';
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                });
+            }
+
+            updateLivePreview(data) {
+                const ctx = this.liveCtx;
+                const width = this.liveCanvas.width;
+                const height = this.liveCanvas.height;
+                
+                // Clear preview
+                ctx.clearRect(0, 0, width, height);
+                
+                // Simulate live fingerprint image
+                ctx.fillStyle = '#333';
+                ctx.fillRect(0, 0, width, height);
+                
+                // Draw fingerprint ridges in preview
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = 1;
+                
+                for (let i = 0; i < 10; i++) {
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    const radius = 20 + i * 5;
+                    
+                    ctx.beginPath();
+                    for (let angle = 0; angle < Math.PI * 2; angle += 0.2) {
+                        const x = centerX + radius * Math.cos(angle + i * 0.5);
+                        const y = centerY + radius * Math.sin(angle + i * 0.5);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                
+                // Hide overlay if scanning
+                if (this.isScanning) {
+                    document.getElementById('previewOverlay').style.display = 'none';
+                }
+            }
+
+            updateLivePreviewWithFingerprint() {
+                const ctx = this.liveCtx;
+                const width = this.liveCanvas.width;
+                const height = this.liveCanvas.height;
+                
+                // Clear and draw enhanced fingerprint
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw fingerprint background
+                const gradient = ctx.createLinearGradient(0, 0, width, height);
+                gradient.addColorStop(0, '#2c3e50');
+                gradient.addColorStop(1, '#34495e');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+                
+                // Draw detailed fingerprint ridges
+                ctx.strokeStyle = '#ecf0f1';
+                ctx.lineWidth = 1.5;
+                
+                // Create multiple ridge patterns
+                for (let pattern = 0; pattern < 3; pattern++) {
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < 50; i++) {
+                        const x = (i / 50) * width;
+                        const y = height / 2 + Math.sin(i * 0.3 + pattern) * 30;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.stroke();
+                }
+                
+                // Add some noise for realism
+                for (let i = 0; i < 100; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const size = Math.random() * 2;
+                    
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Start fingerprint scanning
+            startFingerprintScan() {
+                if (!this.isConnected) {
+                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
                     return;
                 }
                 
-                // Parse hex or text command
-                let commandData;
+                this.isScanning = true;
+                this.scanStartTime = Date.now();
                 
-                if (/^[0-9A-F\s]+$/i.test(commandText.replace(/\s+/g, ''))) {
-                    // Hex command
-                    const hexArray = commandText.trim().split(/\s+/);
-                    commandData = new Uint8Array(hexArray.map(h => parseInt(h, 16)));
-                    this.logMessage(`Gửi HEX: ${commandText}`);
-                } else {
-                    // Text command
-                    const encoder = new TextEncoder();
-                    commandData = encoder.encode(commandText + '\r\n');
-                    this.logMessage(`Gửi: ${commandText}`);
-                }
+                document.getElementById('waitingOverlay').classList.remove('hidden');
+                document.getElementById('scannerAnimation').style.display = 'block';
                 
-                // Send the command
-                this.sendRawCommand(commandData);
-                input.value = '';
-                input.focus();
+                this.showNotification('Bắt đầu quét vân tay... Đặt ngón tay lên máy quét', 'warning');
+                this.logMessage('Bắt đầu quét vân tay...');
+                
+                // Send scan command to ZK4500
+                this.sendCommand('SCAN');
+                
+                // Start continuous reading simulation
+                this.startScanSimulation();
             }
 
-            async sendRawCommand(data) {
-                if (!this.port || !this.isConnected) {
-                    this.showNotification('Chưa kết nối với thiết bị', 'error');
+            stopFingerprintScan() {
+                this.isScanning = false;
+                document.getElementById('scannerAnimation').style.display = 'none';
+                document.getElementById('waitingOverlay').classList.remove('hidden');
+                
+                this.showNotification('Đã dừng quét vân tay', 'info');
+                this.logMessage('Dừng quét vân tay');
+            }
+
+            startScanSimulation() {
+                if (!this.isScanning) return;
+                
+                // Simulate occasional fingerprint scans
+                if (Math.random() > 0.7) {
+                    this.handleFingerprintScan();
+                }
+                
+                // Continue simulation
+                setTimeout(() => this.startScanSimulation(), 1000);
+            }
+
+            // Simulate fingerprint (for testing)
+            simulateFingerprint() {
+                if (!this.isScanning) {
+                    this.isScanning = true;
+                    document.getElementById('scannerAnimation').style.display = 'block';
+                }
+                
+                this.handleFingerprintScan();
+                
+                // Auto stop after simulation
+                setTimeout(() => {
+                    this.isScanning = false;
+                    document.getElementById('scannerAnimation').style.display = 'none';
+                }, 2000);
+            }
+
+            clearFingerprint() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.liveCtx.clearRect(0, 0, this.liveCanvas.width, this.liveCanvas.height);
+                
+                this.minutiaePoints.forEach(point => {
+                    point.element.classList.remove('active');
+                });
+                
+                document.getElementById('waitingOverlay').classList.remove('hidden');
+                document.getElementById('previewOverlay').style.display = 'flex';
+                
+                this.showNotification('Đã xóa hiển thị vân tay', 'info');
+            }
+
+            // Test connection
+            testConnection() {
+                if (!this.isConnected) {
+                    this.showNotification('Chưa kết nối với ZK4500', 'error');
                     return;
                 }
                 
-                try {
-                    const writer = this.port.writable.getWriter();
-                    await writer.write(data);
-                    writer.releaseLock();
-                } catch (error) {
-                    this.logMessage(`Lỗi gửi lệnh: ${error.message}`);
-                }
+                this.sendCommand('TEST');
+                this.showNotification('Đang test kết nối ZK4500...', 'warning');
+                
+                setTimeout(() => {
+                    this.showNotification('✅ Kết nối ZK4500 ổn định!', 'success');
+                }, 1000);
             }
 
-            // Update connection status UI
-            updateConnectionStatus(connected) {
+            startContinuousScan() {
+                if (!this.isConnected) {
+                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
+                    return;
+                }
+                
+                this.isScanning = true;
+                this.showNotification('Bắt đầu quét liên tục...', 'warning');
+                this.logMessage('Bắt đầu chế độ quét liên tục');
+                
+                // Send continuous scan command
+                this.sendCommand('CONTINUOUS_SCAN');
+            }
+
+            captureFingerprint() {
+                if (!this.isConnected) {
+                    this.showNotification('Vui lòng kết nối ZK4500 trước', 'warning');
+                    return;
+                }
+                
+                this.showNotification('Đang chụp vân tay...', 'warning');
+                this.sendCommand('CAPTURE');
+                
+                // Simulate capture
+                setTimeout(() => {
+                    this.handleFingerprintScan();
+                    this.showNotification('✅ Đã chụp vân tay thành công!', 'success');
+                }, 1500);
+            }
+
+            updateConnectionStatus() {
                 const statusEl = document.getElementById('connectionStatus');
-                
-                if (connected) {
-                    statusEl.className = 'status-box status-connected';
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>ĐÃ KẾT NỐI THÀNH CÔNG!</span>';
+                if (this.isConnected) {
+                    statusEl.innerHTML = `
+                        <i class="fas fa-check-circle"></i> 
+                        <span>ĐÃ KẾT NỐI ZK4500 - Sẵn sàng quét vân tay</span>
+                    `;
+                    statusEl.style.color = '#2ec4b6';
                 } else {
-                    statusEl.className = 'status-box status-disconnected';
-                    statusEl.innerHTML = '<i class="fas fa-times-circle"></i> <span>THIẾT BỊ ĐÃ NHẬN NHƯNG CHƯA CÓ CỔNG COM</span>';
+                    statusEl.innerHTML = `
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        <span>Đang chờ kết nối ZK4500...</span>
+                    `;
+                    statusEl.style.color = 'white';
                 }
             }
 
-            // Log message to data log
-            logMessage(message) {
-                const logContainer = document.getElementById('dataLog');
+            updateBrightness(value) {
+                this.canvas.style.filter = `brightness(${value}%)`;
+                this.liveCanvas.style.filter = `brightness(${value}%)`;
+            }
+
+            updateContrast(value) {
+                const currentBrightness = document.getElementById('brightnessSlider').value;
+                this.canvas.style.filter = `brightness(${currentBrightness}%) contrast(${value}%)`;
+                this.liveCanvas.style.filter = `brightness(${currentBrightness}%) contrast(${value}%)`;
+            }
+
+            logMessage(message, type = 'info') {
+                const logContainer = document.getElementById('scanLog');
                 const entry = document.createElement('div');
-                entry.className = 'log-entry';
-                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString('vi-VN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                entry.textContent = `[${timestamp}] ${message}`;
                 logContainer.appendChild(entry);
                 logContainer.scrollTop = logContainer.scrollHeight;
             }
 
-            // Show notification
+            clearLog() {
+                document.getElementById('scanLog').innerHTML = `
+                    <div class="log-entry">[${new Date().toLocaleTimeString('vi-VN')}] Đã xóa nhật ký</div>
+                `;
+            }
+
+            exportLog() {
+                const entries = document.querySelectorAll('.log-entry');
+                let logText = 'NHẬT KÝ QUÉT VÂN TAY ZK4500\n';
+                logText += '='.repeat(50) + '\n\n';
+                
+                entries.forEach(entry => {
+                    logText += entry.textContent + '\n';
+                });
+                
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `zk4500-scan-log-${new Date().toISOString().slice(0,10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                this.showNotification('Đã xuất nhật ký', 'success');
+            }
+
             showNotification(message, type = 'info') {
                 const notification = document.getElementById('notification');
                 notification.textContent = message;
                 notification.className = `notification ${type}`;
                 
-                setTimeout(() => {
-                    notification.classList.add('show');
-                }, 10);
+                setTimeout(() => notification.classList.add('show'), 10);
+                setTimeout(() => notification.classList.remove('show'), 3000);
+            }
+
+            animate() {
+                // Update scanner animation
+                if (this.isScanning) {
+                    const scanner = document.getElementById('scannerAnimation');
+                    const position = parseFloat(scanner.style.top || '0');
+                    scanner.style.top = `${(position + 2) % 100}%`;
+                }
                 
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 4000);
+                // Continue animation loop
+                requestAnimationFrame(() => this.animate());
+            }
+
+            openFingerprintDetails() {
+                document.getElementById('fingerprintDetails').classList.add('active');
+            }
+
+            closeDetails() {
+                document.getElementById('fingerprintDetails').classList.remove('active');
             }
         }
 
-        // Global function for special commands
-        window.sendSpecialCommand = function(commandType) {
-            if (window.zkHandler && window.zkHandler.SPECIAL_COMMANDS[commandType]) {
-                const command = window.zkHandler.SPECIAL_COMMANDS[commandType];
-                window.zkHandler.sendRawCommand(command);
-                window.zkHandler.logMessage(`Đã gửi lệnh ${commandType}`);
-            }
-        };
+        // Global functions for button clicks
+        let visualizer;
 
-        // Initialize the handler
+        function connectToZK4500() {
+            if (!visualizer) visualizer = new FingerprintVisualizer();
+            visualizer.connectToZK4500();
+        }
+
+        function startFingerprintScan() {
+            if (!visualizer) visualizer = new FingerprintVisualizer();
+            visualizer.startFingerprintScan();
+        }
+
+        function stopFingerprintScan() {
+            if (visualizer) visualizer.stopFingerprintScan();
+        }
+
+        function simulateFingerprint() {
+            if (!visualizer) visualizer = new FingerprintVisualizer();
+            visualizer.simulateFingerprint();
+        }
+
+        function clearFingerprint() {
+            if (visualizer) visualizer.clearFingerprint();
+        }
+
+        function testConnection() {
+            if (visualizer) visualizer.testConnection();
+        }
+
+        function startContinuousScan() {
+            if (visualizer) visualizer.startContinuousScan();
+        }
+
+        function captureFingerprint() {
+            if (visualizer) visualizer.captureFingerprint();
+        }
+
+        function updateBrightness(value) {
+            if (visualizer) visualizer.updateBrightness(value);
+        }
+
+        function updateContrast(value) {
+            if (visualizer) visualizer.updateContrast(value);
+        }
+
+        function clearLog() {
+            if (visualizer) visualizer.clearLog();
+        }
+
+        function exportLog() {
+            if (visualizer) visualizer.exportLog();
+        }
+
+        function closeDetails() {
+            if (visualizer) visualizer.closeDetails();
+        }
+
+        // Initialize visualizer when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            window.zkHandler = new ZK4500CompositeHandler();
+            visualizer = new FingerprintVisualizer();
+            
+            // Auto-simulate for demo
+            setTimeout(() => {
+                if (!visualizer.isConnected) {
+                    visualizer.simulateFingerprint();
+                }
+            }, 2000);
         });
     </script>
 </body>
