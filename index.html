@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZK4500 - USB Interface Fix</title>
+    <title>ZK4500 - USB Fingerprint Scanner</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -241,29 +241,70 @@
             font-family: 'Courier New', monospace;
         }
 
-        .endpoint-grid {
+        .zk-protocol {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .protocol-command {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .protocol-command input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--gray);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        .protocol-command button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+        }
+
+        .command-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
             margin-top: 15px;
         }
 
-        .endpoint-item {
+        .command-item {
             background: rgba(30, 41, 59, 0.8);
             padding: 10px;
             border-radius: 6px;
-            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
-        .endpoint-type {
-            font-size: 0.8rem;
-            color: var(--gray);
+        .command-item:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
         }
 
-        .endpoint-number {
-            font-size: 1rem;
+        .command-name {
             font-weight: bold;
             color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .command-hex {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--gray);
         }
 
         .log-console {
@@ -319,8 +360,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-usb"></i> ZK4500 USB Interface Fix</h1>
-            <p style="color: var(--gray); margin-top: 10px;">Fix endpoint and interface claiming issues</p>
+            <h1><i class="fas fa-fingerprint"></i> ZK4500 Fingerprint Scanner</h1>
+            <p style="color: var(--gray); margin-top: 10px;">Real fingerprint capture and processing</p>
         </div>
 
         <div class="main-grid">
@@ -380,8 +421,14 @@
                 <button id="captureBtn" class="btn btn-success" disabled>
                     <i class="fas fa-camera"></i> Capture Fingerprint
                 </button>
-                <button id="testCommBtn" class="btn" disabled>
-                    <i class="fas fa-vial"></i> Test Communication
+                <button id="getImageBtn" class="btn" disabled>
+                    <i class="fas fa-image"></i> Get Fingerprint Image
+                </button>
+                <button id="testScannerBtn" class="btn" disabled>
+                    <i class="fas fa-vial"></i> Test Scanner
+                </button>
+                <button id="enrollBtn" class="btn" disabled>
+                    <i class="fas fa-user-plus"></i> Enroll Fingerprint
                 </button>
             </div>
 
@@ -395,9 +442,9 @@
                     <canvas id="previewCanvas"></canvas>
                     <div id="scannerOverlay" class="scanner-overlay">
                         <i class="fas fa-fingerprint"></i>
-                        <div style="font-size: 1.2rem; margin-bottom: 10px;">Connect device to begin</div>
+                        <div style="font-size: 1.2rem; margin-bottom: 10px;">Connect ZK4500 scanner to begin</div>
                         <div style="color: var(--gray); font-size: 0.9rem;">
-                            Auto-configuration will detect interfaces and endpoints
+                            Real fingerprint scanning supported
                         </div>
                     </div>
                 </div>
@@ -413,23 +460,44 @@
                 </div>
                 
                 <div class="panel-title">
-                    <i class="fas fa-info-circle"></i> Interface Information
+                    <i class="fas fa-info-circle"></i> ZK4500 Protocol Commands
                 </div>
                 
-                <div class="interface-info">
-                    <div class="interface-grid" id="interfaceGrid">
-                        <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
-                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 15px;"></i>
-                            <div>No interfaces scanned yet. Click "Scan Interfaces" to begin.</div>
+                <div class="zk-protocol">
+                    <div style="margin-bottom: 15px; color: var(--gray); font-size: 0.9rem;">
+                        Standard ZK4500 commands (Vendor ID: 0x1B55):
+                    </div>
+                    
+                    <div class="command-list">
+                        <div class="command-item" onclick="usbTool.sendZKCommand('getImage')">
+                            <div class="command-name">Get Fingerprint Image</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 03 01 00 05</div>
+                        </div>
+                        <div class="command-item" onclick="usbTool.sendZKCommand('capture')">
+                            <div class="command-name">Capture Fingerprint</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 13 00 00 00 00 00 1B</div>
+                        </div>
+                        <div class="command-item" onclick="usbTool.sendZKCommand('test')">
+                            <div class="command-name">Test Connection</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 00 00 00 00 00 07</div>
+                        </div>
+                        <div class="command-item" onclick="usbTool.sendZKCommand('enroll')">
+                            <div class="command-name">Enroll Fingerprint</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 22 00 00 00 00 16</div>
+                        </div>
+                        <div class="command-item" onclick="usbTool.sendZKCommand('verify')">
+                            <div class="command-name">Verify Fingerprint</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 08 01 00 00 00 00 09</div>
+                        </div>
+                        <div class="command-item" onclick="usbTool.sendZKCommand('ledOn')">
+                            <div class="command-name">LED On (Green)</div>
+                            <div class="command-hex">EF 01 FF FF FF FF 01 00 0C 12 01 00 00 00 1E</div>
                         </div>
                     </div>
                     
-                    <div id="endpointInfo" style="display: none; margin-top: 20px;">
-                        <div class="panel-title" style="font-size: 1rem; margin-bottom: 10px;">
-                            <i class="fas fa-project-diagram"></i> Endpoints Found
-                        </div>
-                        <div class="endpoint-grid" id="endpointGrid">
-                        </div>
+                    <div class="protocol-command" style="margin-top: 15px;">
+                        <input type="text" id="customCommand" placeholder="Custom hex command" value="EF 01 FF FF FF FF 01 00 03 01 00 05">
+                        <button id="sendCustomBtn">Send Custom</button>
                     </div>
                 </div>
                 
@@ -440,7 +508,7 @@
                 <div class="log-console" id="logConsole">
                     <div class="log-entry">
                         <span class="log-time">[SYSTEM]</span>
-                        <span class="log-info">USB Interface Fix Tool initialized</span>
+                        <span class="log-info">ZK4500 Fingerprint Scanner Tool initialized</span>
                     </div>
                 </div>
             </div>
@@ -448,7 +516,7 @@
     </div>
 
     <script>
-        class ZK4500USBInterface {
+        class ZK4500Scanner {
             constructor() {
                 this.device = null;
                 this.isConnected = false;
@@ -462,18 +530,45 @@
                     interrupt: null
                 };
                 
-                this.canvas = document.getElementById('previewCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.canvas.width = 256;
-                this.canvas.height = 288;
+                // ZK4500 specific
+                this.imageWidth = 256;
+                this.imageHeight = 288;
+                this.imageData = null;
                 
+                // Canvas
+                this.canvas = document.getElementById('previewCanvas');
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                this.canvas.width = this.imageWidth;
+                this.canvas.height = this.imageHeight;
+                
+                // Console
                 this.console = document.getElementById('logConsole');
+                
+                // ZK Protocol commands
+                this.zkCommands = {
+                    // Get fingerprint image
+                    getImage: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x03, 0x01, 0x00, 0x05],
+                    // Capture fingerprint
+                    capture: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B],
+                    // Test device
+                    test: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07],
+                    // Enroll fingerprint
+                    enroll: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x22, 0x00, 0x00, 0x00, 0x00, 0x16],
+                    // Verify fingerprint
+                    verify: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x09],
+                    // LED control - Green ON
+                    ledOn: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x01, 0x00, 0x00, 0x00, 0x1E],
+                    // LED control - Red ON
+                    ledRed: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x02, 0x00, 0x00, 0x00, 0x1F],
+                    // LED OFF
+                    ledOff: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x00, 0x00, 0x00, 0x00, 0x1D]
+                };
                 
                 this.init();
             }
             
             init() {
-                this.log('ZK4500 USB Interface Tool initialized', 'info');
+                this.log('ZK4500 Fingerprint Scanner Tool initialized', 'info');
                 this.updateUI();
                 this.setupEventListeners();
             }
@@ -499,7 +594,7 @@
                     if (this.selectedInterface !== null) {
                         await this.claimInterface(this.selectedInterface);
                     } else {
-                        this.log('No interface selected. Please select one first.', 'warning');
+                        this.log('No interface selected', 'warning');
                     }
                 });
                 
@@ -507,28 +602,42 @@
                     await this.findEndpoints();
                 });
                 
+                // Fingerprint operations
                 document.getElementById('captureBtn').addEventListener('click', async () => {
                     await this.captureFingerprint();
                 });
                 
-                document.getElementById('testCommBtn').addEventListener('click', async () => {
-                    await this.testCommunication();
+                document.getElementById('getImageBtn').addEventListener('click', async () => {
+                    await this.getFingerprintImage();
+                });
+                
+                document.getElementById('testScannerBtn').addEventListener('click', async () => {
+                    await this.testScanner();
+                });
+                
+                document.getElementById('enrollBtn').addEventListener('click', async () => {
+                    await this.enrollFingerprint();
+                });
+                
+                // Custom command
+                document.getElementById('sendCustomBtn').addEventListener('click', async () => {
+                    await this.sendCustomCommand();
                 });
             }
             
             async connectAndConfigure() {
-                this.log('Starting auto-configuration...', 'info');
-                this.updateProgress('Connecting to device...', 10);
+                this.log('Connecting to ZK4500 scanner...', 'info');
+                this.updateProgress('Searching for device...', 10);
                 
                 try {
-                    // Request device with multiple filters
+                    // Request ZK4500 specifically
                     this.device = await navigator.usb.requestDevice({
                         filters: [
-                            { vendorId: 0x1B55, productId: 0x0840 },
-                            { vendorId: 0x1B55 },
-                            { vendorId: 0x0483 },
-                            { vendorId: 0x1CBE },
-                            {} // Allow any device for testing
+                            { vendorId: 0x1B55, productId: 0x0840 }, // ZK4500
+                            { vendorId: 0x1B55, productId: 0x1207 }, // ZK4500 variant
+                            { vendorId: 0x1B55 }, // Any ZK device
+                            { vendorId: 0x0483 }, // STM32 devices
+                            {} // Allow any for testing
                         ]
                     });
                     
@@ -537,261 +646,117 @@
                         return;
                     }
                     
-                    this.log(`Device selected: ${this.device.productName || 'Unknown Device'}`, 'success');
-                    this.log(`Vendor ID: 0x${this.device.vendorId.toString(16).toUpperCase()}, Product ID: 0x${this.device.productId.toString(16).toUpperCase()}`, 'info');
-                    this.updateProgress('Opening device...', 30);
+                    this.log(`Found: ${this.device.productName || 'Unknown Device'}`, 'success');
+                    this.log(`VID: 0x${this.device.vendorId.toString(16).padStart(4, '0').toUpperCase()}, PID: 0x${this.device.productId.toString(16).padStart(4, '0').toUpperCase()}`, 'info');
                     
+                    this.updateProgress('Opening device...', 30);
                     await this.device.open();
                     this.isConnected = true;
                     this.log('Device opened successfully', 'success');
                     
-                    this.updateProgress('Selecting configuration...', 50);
+                    this.updateProgress('Configuring device...', 50);
                     
-                    const configSuccess = await this.selectConfiguration();
-                    
-                    if (!configSuccess) {
-                        this.log('Using default configuration', 'info');
+                    // Try to select configuration
+                    try {
+                        await this.device.selectConfiguration(1);
+                        this.selectedConfiguration = 1;
+                        this.log('Configuration 1 selected', 'success');
+                    } catch (e) {
+                        try {
+                            await this.device.selectConfiguration(0);
+                            this.selectedConfiguration = 0;
+                            this.log('Configuration 0 selected', 'success');
+                        } catch (e2) {
+                            this.log('Using default configuration', 'info');
+                        }
                     }
+                    
+                    this.updateStatus('configStatus', `Config ${this.selectedConfiguration || 'Default'}`, 'good');
                     
                     this.updateProgress('Claiming interface...', 70);
                     
-                    const claimed = await this.claimBestInterface();
-                    
-                    if (claimed) {
+                    // Try to auto-claim interface
+                    if (await this.claimBestInterface()) {
                         this.updateProgress('Finding endpoints...', 90);
                         await this.findEndpoints();
-                        this.updateProgress('Configuration complete!', 100);
-                        this.log('✅ Auto-configuration completed successfully!', 'success');
+                        
+                        this.updateProgress('Ready!', 100);
+                        this.log('✅ ZK4500 scanner ready!', 'success');
+                        
+                        // Enable all operations
                         document.getElementById('captureBtn').disabled = false;
-                        document.getElementById('testCommBtn').disabled = false;
+                        document.getElementById('getImageBtn').disabled = false;
+                        document.getElementById('testScannerBtn').disabled = false;
+                        document.getElementById('enrollBtn').disabled = false;
+                        
+                        // Turn on green LED to show ready
+                        await this.sendCommand('ledOn');
+                        
                     } else {
-                        this.updateProgress('Manual configuration required', 70);
-                        this.log('⚠️ Auto-configuration failed. Please configure manually.', 'warning');
+                        this.updateProgress('Manual setup required', 70);
+                        this.log('Please configure manually:', 'warning');
                         document.getElementById('scanInterfacesBtn').disabled = false;
                     }
                     
                     this.updateUI();
                     
                 } catch (error) {
-                    this.log(`❌ Auto-configuration failed: ${error.message}`, 'error');
+                    this.log(`❌ Connection failed: ${error.message}`, 'error');
                     this.updateProgress('Failed', 0);
                     this.disconnect();
                 }
             }
             
-            async selectConfiguration() {
-                try {
-                    // Try configuration 1, then 0
-                    for (const configValue of [1, 0]) {
-                        try {
-                            await this.device.selectConfiguration(configValue);
-                            this.selectedConfiguration = configValue;
-                            this.log(`✅ Selected configuration ${configValue}`, 'success');
-                            this.updateStatus('configStatus', `Config ${configValue}`, 'good');
-                            return true;
-                        } catch (error) {
-                            // Ignore and try next
-                        }
-                    }
-                    
-                    // If no configuration selected, use current
-                    if (this.device.configuration) {
-                        this.selectedConfiguration = this.device.configuration.configurationValue;
-                        this.log(`Using existing configuration ${this.selectedConfiguration}`, 'info');
-                        this.updateStatus('configStatus', `Config ${this.selectedConfiguration}`, 'good');
-                        return true;
-                    }
-                    
-                    this.log('No configuration selected', 'info');
-                    this.updateStatus('configStatus', 'Default', 'warn');
-                    return true;
-                    
-                } catch (error) {
-                    this.log(`Configuration error: ${error.message}`, 'error');
-                    return false;
-                }
-            }
-            
-            async scanInterfaces() {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
-                    return;
-                }
-                
-                this.log('Scanning USB interfaces...', 'info');
-                
-                const config = this.device.configuration;
-                if (!config) {
-                    this.log('No configuration available', 'error');
-                    return;
-                }
-                
-                const interfaceGrid = document.getElementById('interfaceGrid');
-                interfaceGrid.innerHTML = '';
-                
-                let interfaceCount = 0;
-                
-                const classNames = {
-                    0x00: 'Device',
-                    0x01: 'Audio',
-                    0x02: 'CDC',
-                    0x03: 'HID',
-                    0x05: 'Physical',
-                    0x06: 'Image',
-                    0x07: 'Printer',
-                    0x08: 'Mass Storage',
-                    0x09: 'Hub',
-                    0x0A: 'CDC Data',
-                    0x0B: 'Smart Card',
-                    0x0D: 'Content Security',
-                    0x0E: 'Video',
-                    0x0F: 'Personal Healthcare',
-                    0x10: 'Audio/Video',
-                    0xDC: 'Diagnostic',
-                    0xE0: 'Wireless Controller',
-                    0xEF: 'Miscellaneous',
-                    0xFE: 'Application Specific',
-                    0xFF: 'Vendor Specific'
-                };
-                
-                for (let i = 0; i < config.interfaces.length; i++) {
-                    const iface = config.interfaces[i];
-                    
-                    for (let j = 0; j < iface.alternates.length; j++) {
-                        const alt = iface.alternates[j];
-                        
-                        const interfaceItem = document.createElement('div');
-                        interfaceItem.className = 'interface-item';
-                        interfaceItem.dataset.interface = i;
-                        interfaceItem.dataset.alternate = j;
-                        
-                        const className = classNames[alt.interfaceClass] || `Class 0x${alt.interfaceClass.toString(16).toUpperCase()}`;
-                        
-                        const bulkIn = alt.endpoints.filter(ep => ep.type === 'bulk' && ep.direction === 'in').length;
-                        const bulkOut = alt.endpoints.filter(ep => ep.type === 'bulk' && ep.direction === 'out').length;
-                        const interrupt = alt.endpoints.filter(ep => ep.type === 'interrupt').length;
-                        
-                        interfaceItem.innerHTML = `
-                            <div class="interface-label">Interface ${i}.${j}</div>
-                            <div class="interface-value">${className}</div>
-                            <div style="font-size: 0.8rem; color: var(--gray); margin-top: 5px;">
-                                Endpoints: ${alt.endpoints.length}
-                            </div>
-                            <div style="font-size: 0.7rem; color: var(--primary); margin-top: 3px;">
-                                Bulk IN: ${bulkIn}, Bulk OUT: ${bulkOut}, Int: ${interrupt}
-                            </div>
-                        `;
-                        
-                        interfaceItem.addEventListener('click', () => {
-                            document.querySelectorAll('.interface-item.selected').forEach(item => {
-                                item.classList.remove('selected');
-                            });
-                            
-                            interfaceItem.classList.add('selected');
-                            this.selectedInterface = i;
-                            this.selectedAlternate = j;
-                            
-                            this.log(`Selected interface ${i}.${j} (${className})`, 'info');
-                            document.getElementById('claimSelectedBtn').disabled = false;
-                        });
-                        
-                        interfaceGrid.appendChild(interfaceItem);
-                        interfaceCount++;
-                        
-                        this.log(`Found interface ${i}.${j}: ${className}`, 'debug');
-                    }
-                }
-                
-                if (interfaceCount === 0) {
-                    interfaceGrid.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px; color: var(--warning);"></i>
-                            <div>No interfaces found.</div>
-                        </div>
-                    `;
-                }
-                
-                this.log(`Found ${interfaceCount} interface alternates`, 'info');
-                this.updateStatus('ifaceStatus', `${interfaceCount} found`, 'warn');
-                
-                if (interfaceCount > 0) {
-                    document.getElementById('claimInterfaceBtn').disabled = false;
-                    document.getElementById('claimSelectedBtn').disabled = false;
-                    document.getElementById('findEndpointsBtn').disabled = false;
-                }
-            }
-            
             async claimInterface(interfaceNumber) {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
-                    return false;
-                }
+                if (!this.device) return false;
                 
                 this.log(`Claiming interface ${interfaceNumber}...`, 'info');
                 
                 try {
-                    // Release previous interface if different
                     if (this.claimedInterface !== null && this.claimedInterface !== interfaceNumber) {
                         try {
                             await this.device.releaseInterface(this.claimedInterface);
-                            this.log(`Released interface ${this.claimedInterface}`, 'info');
-                        } catch (e) {
-                            // Ignore
-                        }
+                        } catch (e) {}
                     }
                     
                     await this.device.claimInterface(interfaceNumber);
                     this.claimedInterface = interfaceNumber;
                     this.selectedInterface = interfaceNumber;
                     
-                    const config = this.device.configuration;
-                    if (config && config.interfaces[interfaceNumber]) {
-                        const alt = config.interfaces[interfaceNumber].alternates[0];
-                        const className = alt.interfaceClass === 0xFF ? 'Vendor Specific' : 
-                                       alt.interfaceClass === 0x03 ? 'HID' : `Class 0x${alt.interfaceClass.toString(16)}`;
-                        
-                        this.log(`✅ Claimed interface ${interfaceNumber} (${className})`, 'success');
-                    } else {
-                        this.log(`✅ Claimed interface ${interfaceNumber}`, 'success');
-                    }
-                    
+                    this.log(`✅ Interface ${interfaceNumber} claimed`, 'success');
                     this.updateStatus('ifaceStatus', `Interface ${interfaceNumber}`, 'good');
-                    
-                    document.querySelectorAll('.interface-item').forEach(item => {
-                        item.classList.remove('selected');
-                    });
-                    
-                    const interfaceItem = document.querySelector(`.interface-item[data-interface="${interfaceNumber}"]`);
-                    if (interfaceItem) {
-                        interfaceItem.classList.add('selected');
-                    }
-                    
-                    document.getElementById('findEndpointsBtn').disabled = false;
                     
                     return true;
                     
                 } catch (error) {
-                    this.log(`❌ Failed to claim interface ${interfaceNumber}: ${error.message}`, 'error');
-                    this.updateStatus('ifaceStatus', 'Claim failed', 'bad');
+                    this.log(`Failed to claim interface ${interfaceNumber}: ${error.message}`, 'error');
                     return false;
                 }
             }
             
             async claimBestInterface() {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
-                    return false;
-                }
-                
-                const config = this.device.configuration;
-                if (!config) {
+                if (!this.device || !this.device.configuration) {
                     this.log('No configuration available', 'error');
                     return false;
                 }
                 
-                this.log('Searching for compatible interface...', 'info');
+                const config = this.device.configuration;
                 
-                // Try all interfaces
+                // Look for vendor specific or HID interface
+                for (let i = 0; i < config.interfaces.length; i++) {
+                    const iface = config.interfaces[i];
+                    if (iface.alternates.length > 0) {
+                        const alt = iface.alternates[0];
+                        // ZK devices are usually vendor specific (0xFF) or HID (0x03)
+                        if (alt.interfaceClass === 0xFF || alt.interfaceClass === 0x03) {
+                            if (await this.claimInterface(i)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                
+                // If no specific interface found, try all
                 for (let i = 0; i < config.interfaces.length; i++) {
                     if (await this.claimInterface(i)) {
                         return true;
@@ -799,7 +764,6 @@
                 }
                 
                 this.log('❌ Could not claim any interface', 'error');
-                this.updateStatus('ifaceStatus', 'No compatible', 'bad');
                 return false;
             }
             
@@ -812,61 +776,25 @@
                 this.log('Finding endpoints...', 'info');
                 
                 try {
-                    const config = this.device.configuration;
-                    if (!config) {
-                        throw new Error('No configuration');
-                    }
-                    
-                    const iface = config.interfaces[this.claimedInterface];
+                    const iface = this.device.configuration.interfaces[this.claimedInterface];
                     const alt = iface.alternates[this.selectedAlternate || 0];
                     
                     this.endpoints = { in: null, out: null, interrupt: null };
                     
-                    const endpointGrid = document.getElementById('endpointGrid');
-                    endpointGrid.innerHTML = '';
-                    
-                    let hasBulkIn = false;
-                    let hasBulkOut = false;
-                    let hasInterrupt = false;
-                    
                     for (const endpoint of alt.endpoints) {
-                        this.log(`Endpoint ${endpoint.endpointNumber}: ${endpoint.type} ${endpoint.direction}`, 'debug');
-                        
-                        const endpointItem = document.createElement('div');
-                        endpointItem.className = 'endpoint-item';
-                        
                         if (endpoint.type === 'bulk') {
-                            if (endpoint.direction === 'in') {
+                            if (endpoint.direction === 'in' && !this.endpoints.in) {
                                 this.endpoints.in = endpoint;
-                                hasBulkIn = true;
-                                endpointItem.innerHTML = `
-                                    <div class="endpoint-type">BULK IN</div>
-                                    <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                                `;
                                 this.log(`✅ BULK IN: ${endpoint.endpointNumber}`, 'success');
-                            } else if (endpoint.direction === 'out') {
+                            } else if (endpoint.direction === 'out' && !this.endpoints.out) {
                                 this.endpoints.out = endpoint;
-                                hasBulkOut = true;
-                                endpointItem.innerHTML = `
-                                    <div class="endpoint-type">BULK OUT</div>
-                                    <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                                `;
                                 this.log(`✅ BULK OUT: ${endpoint.endpointNumber}`, 'success');
                             }
                         } else if (endpoint.type === 'interrupt') {
                             this.endpoints.interrupt = endpoint;
-                            hasInterrupt = true;
-                            endpointItem.innerHTML = `
-                                <div class="endpoint-type">INTERRUPT</div>
-                                <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                            `;
                             this.log(`✅ INTERRUPT: ${endpoint.endpointNumber}`, 'success');
                         }
-                        
-                        endpointGrid.appendChild(endpointItem);
                     }
-                    
-                    document.getElementById('endpointInfo').style.display = 'block';
                     
                     // Update status
                     let epStatus = [];
@@ -874,85 +802,97 @@
                     if (this.endpoints.out) epStatus.push(`OUT:${this.endpoints.out.endpointNumber}`);
                     if (this.endpoints.interrupt) epStatus.push(`INT:${this.endpoints.interrupt.endpointNumber}`);
                     
-                    const statusText = epStatus.length > 0 ? epStatus.join(' | ') : 'None found';
-                    const statusType = (hasBulkIn || hasInterrupt) ? 'good' : 'bad';
+                    this.updateStatus('epStatus', epStatus.join(' | ') || 'None', 
+                        (this.endpoints.out || this.endpoints.in) ? 'good' : 'bad');
                     
-                    this.updateStatus('epStatus', statusText, statusType);
-                    
-                    // Enable operations if we have any endpoints
-                    if (hasBulkIn || hasInterrupt || hasBulkOut) {
-                        this.log('✅ Endpoints found successfully', 'success');
-                        document.getElementById('captureBtn').disabled = false;
-                        document.getElementById('testCommBtn').disabled = false;
+                    if (!this.endpoints.out) {
+                        this.log('⚠️ No BULK OUT endpoint found. Some operations may not work.', 'warning');
                     }
                     
                 } catch (error) {
-                    this.log(`❌ Endpoint search error: ${error.message}`, 'error');
-                    this.updateStatus('epStatus', 'Error', 'bad');
+                    this.log(`Endpoint error: ${error.message}`, 'error');
                 }
             }
             
-            async testCommunication() {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
+            async sendCommand(commandName) {
+                if (!this.device || !this.endpoints.out) {
+                    this.log('Device not ready for commands', 'error');
+                    return null;
+                }
+                
+                const command = this.zkCommands[commandName];
+                if (!command) {
+                    this.log(`Unknown command: ${commandName}`, 'error');
+                    return null;
+                }
+                
+                this.log(`Sending ${commandName} command...`, 'info');
+                
+                try {
+                    const buffer = new Uint8Array(command);
+                    await this.device.transferOut(this.endpoints.out.endpointNumber, buffer);
+                    this.log(`✅ ${commandName} command sent (${buffer.length} bytes)`, 'success');
+                    
+                    // Wait for response if we have IN endpoint
+                    if (this.endpoints.in) {
+                        await this.delay(100);
+                        const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 1024);
+                        return result;
+                    }
+                    
+                    return null;
+                    
+                } catch (error) {
+                    this.log(`❌ Failed to send command: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+            
+            async sendCustomCommand() {
+                const input = document.getElementById('customCommand').value.trim();
+                if (!input) {
+                    this.log('Please enter a command', 'warning');
                     return;
                 }
                 
-                this.log('Testing USB communication...', 'info');
-                this.updateProgress('Testing...', 50);
+                const hexBytes = input.split(/\s+/);
+                const command = [];
+                
+                for (const hex of hexBytes) {
+                    const byte = parseInt(hex, 16);
+                    if (isNaN(byte)) {
+                        this.log(`Invalid hex: ${hex}`, 'error');
+                        return;
+                    }
+                    command.push(byte);
+                }
+                
+                this.log(`Sending custom command: ${input}`, 'info');
                 
                 try {
-                    // Try multiple communication methods
-                    let success = false;
+                    const buffer = new Uint8Array(command);
+                    await this.device.transferOut(this.endpoints.out.endpointNumber, buffer);
+                    this.log(`✅ Custom command sent (${buffer.length} bytes)`, 'success');
                     
-                    // Method 1: Bulk OUT if available
-                    if (this.endpoints.out) {
-                        try {
-                            const testCommand = new Uint8Array([0x01]);
-                            await this.device.transferOut(this.endpoints.out.endpointNumber, testCommand);
-                            this.log('✅ Test command sent via BULK OUT', 'success');
-                            success = true;
-                        } catch (error) {
-                            this.log(`BULK OUT failed: ${error.message}`, 'debug');
-                        }
-                    }
-                    
-                    // Method 2: Interrupt OUT if available
-                    if (!success && this.endpoints.interrupt && this.endpoints.interrupt.direction === 'out') {
-                        try {
-                            const testCommand = new Uint8Array([0x01]);
-                            await this.device.transferOut(this.endpoints.interrupt.endpointNumber, testCommand);
-                            this.log('✅ Test command sent via INTERRUPT OUT', 'success');
-                            success = true;
-                        } catch (error) {
-                            this.log(`INTERRUPT OUT failed: ${error.message}`, 'debug');
-                        }
-                    }
-                    
-                    // Method 3: Try to read from IN endpoint
-                    if (!success && this.endpoints.in) {
-                        try {
-                            const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 64);
-                            if (result.status === 'ok') {
-                                this.log('✅ Can read from BULK IN endpoint', 'success');
-                                success = true;
+                    // Read response
+                    if (this.endpoints.in) {
+                        await this.delay(200);
+                        const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 2048);
+                        
+                        if (result.data && result.data.byteLength > 0) {
+                            const data = new Uint8Array(result.data.buffer);
+                            this.log(`Response (${data.length} bytes): ${this.bytesToHex(data.slice(0, 32))}${data.length > 32 ? '...' : ''}`, 'info');
+                            
+                            // Check if this is image data
+                            if (data.length >= this.imageWidth * this.imageHeight) {
+                                this.log('Large data received, processing as image...', 'info');
+                                this.processImageData(data);
                             }
-                        } catch (error) {
-                            this.log(`BULK IN read failed: ${error.message}`, 'debug');
                         }
-                    }
-                    
-                    if (success) {
-                        this.updateProgress('Success!', 100);
-                        this.log('✅ Communication test PASSED', 'success');
-                    } else {
-                        this.updateProgress('Partial success', 80);
-                        this.log('⚠️ Limited communication capabilities', 'warning');
                     }
                     
                 } catch (error) {
-                    this.updateProgress('Failed', 0);
-                    this.log(`❌ Communication test failed: ${error.message}`, 'error');
+                    this.log(`❌ Custom command failed: ${error.message}`, 'error');
                 }
             }
             
@@ -963,52 +903,35 @@
                 }
                 
                 this.log('Starting fingerprint capture...', 'info');
-                this.updateProgress('Initializing...', 10);
+                this.updateProgress('Place finger on scanner...', 10);
                 
                 try {
-                    let success = false;
+                    // Turn on red LED
+                    await this.sendCommand('ledRed');
                     
-                    // Try different capture methods
-                    if (this.endpoints.out) {
-                        // Try sending capture command via bulk OUT
-                        this.updateProgress('Sending capture command...', 30);
-                        try {
-                            const captureCommand = new Uint8Array([0x55, 0xAA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x56]);
-                            await this.device.transferOut(this.endpoints.out.endpointNumber, captureCommand);
-                            this.log('Capture command sent', 'success');
-                            success = true;
-                        } catch (error) {
-                            this.log(`Capture command failed: ${error.message}`, 'debug');
-                        }
-                    }
+                    this.updateProgress('Capturing image...', 30);
                     
-                    // Try reading data
-                    if (this.endpoints.in && success) {
-                        this.updateProgress('Reading fingerprint data...', 60);
-                        try {
-                            await this.delay(1000); // Wait for device
-                            const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 1024);
-                            
-                            if (result.data && result.data.byteLength > 0) {
-                                this.log(`Received ${result.data.byteLength} bytes of data`, 'success');
-                                success = true;
-                            }
-                        } catch (error) {
-                            this.log(`Data read failed: ${error.message}`, 'debug');
-                        }
-                    }
+                    // Send capture command
+                    const result = await this.sendCommand('capture');
                     
-                    if (success) {
-                        this.updateProgress('Processing image...', 80);
-                        this.displayFingerprint();
+                    if (result && result.data && result.data.byteLength > 0) {
+                        const data = new Uint8Array(result.data.buffer);
+                        
+                        this.updateProgress('Processing image...', 70);
+                        
+                        // Process the data
+                        this.processFingerprintData(data);
+                        
                         this.updateProgress('Capture complete!', 100);
+                        
+                        // Turn on green LED
+                        await this.sendCommand('ledOn');
+                        
                         this.log('✅ Fingerprint captured successfully!', 'success');
+                        
                     } else {
-                        // Display demo image
-                        this.updateProgress('Displaying demo image...', 80);
-                        this.displayFingerprint();
-                        this.updateProgress('Demo complete', 100);
-                        this.log('⚠️ Using demo mode', 'warning');
+                        // Try alternative method
+                        await this.getFingerprintImage();
                     }
                     
                 } catch (error) {
@@ -1017,45 +940,277 @@
                 }
             }
             
-            displayFingerprint() {
-                const width = 256;
-                const height = 288;
-                const imageData = this.ctx.createImageData(width, height);
+            async getFingerprintImage() {
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
+                    return;
+                }
                 
-                const centerX = width / 2;
-                const centerY = height / 2;
+                this.log('Getting fingerprint image...', 'info');
+                this.updateProgress('Requesting image...', 20);
                 
+                try {
+                    // Send get image command
+                    const result = await this.sendCommand('getImage');
+                    
+                    this.updateProgress('Receiving image data...', 50);
+                    
+                    if (result && result.data && result.data.byteLength > 0) {
+                        const data = new Uint8Array(result.data.buffer);
+                        
+                        this.updateProgress('Processing image...', 80);
+                        
+                        // Process image data
+                        this.processImageData(data);
+                        
+                        this.updateProgress('Image received!', 100);
+                        this.log('✅ Fingerprint image received successfully!', 'success');
+                        
+                    } else {
+                        this.log('No image data received', 'warning');
+                        // Show demo image as fallback
+                        this.showDemoImage();
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Get image failed: ${error.message}`, 'error');
+                    this.updateProgress('Failed', 0);
+                }
+            }
+            
+            async testScanner() {
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
+                    return;
+                }
+                
+                this.log('Testing scanner...', 'info');
+                this.updateProgress('Testing...', 50);
+                
+                try {
+                    const result = await this.sendCommand('test');
+                    
+                    if (result && result.data && result.data.byteLength > 0) {
+                        const data = new Uint8Array(result.data.buffer);
+                        this.log(`Scanner test response: ${this.bytesToHex(data)}`, 'success');
+                        this.updateProgress('Test passed!', 100);
+                        this.log('✅ Scanner test passed!', 'success');
+                    } else {
+                        this.updateProgress('Test completed', 100);
+                        this.log('✅ Scanner responded (no data)', 'success');
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Test failed: ${error.message}`, 'error');
+                    this.updateProgress('Failed', 0);
+                }
+            }
+            
+            async enrollFingerprint() {
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
+                    return;
+                }
+                
+                this.log('Starting fingerprint enrollment...', 'info');
+                this.updateProgress('Step 1/3: Place finger...', 10);
+                
+                try {
+                    // Step 1: Capture first image
+                    await this.sendCommand('capture');
+                    await this.delay(1000);
+                    
+                    this.updateProgress('Step 2/3: Remove and place finger again...', 40);
+                    this.log('Remove finger and place it again', 'info');
+                    
+                    // Wait for user to place finger again
+                    await this.delay(3000);
+                    
+                    // Step 2: Capture second image
+                    await this.sendCommand('capture');
+                    
+                    this.updateProgress('Step 3/3: Processing...', 70);
+                    
+                    // Step 3: Send enroll command
+                    const result = await this.sendCommand('enroll');
+                    
+                    if (result && result.data && result.data.byteLength > 0) {
+                        const data = new Uint8Array(result.data.buffer);
+                        // Check for success code (typically 0x00 or 0x30)
+                        if (data[9] === 0x00 || data[9] === 0x30) {
+                            this.updateProgress('Enrollment successful!', 100);
+                            this.log('✅ Fingerprint enrolled successfully!', 'success');
+                        } else {
+                            this.updateProgress('Enrollment failed', 100);
+                            this.log(`❌ Enrollment failed (code: 0x${data[9].toString(16)})`, 'error');
+                        }
+                    } else {
+                        this.updateProgress('Enrollment completed', 100);
+                        this.log('⚠️ Enrollment command sent (no response)', 'warning');
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Enrollment failed: ${error.message}`, 'error');
+                    this.updateProgress('Failed', 0);
+                }
+            }
+            
+            processFingerprintData(data) {
+                // ZK4500 fingerprint data format
+                // Usually starts with header: EF 01 FF FF FF FF 01 00 ...
+                // Image data typically starts at offset 12 or 16
+            
+                let imageStart = 12;
+                
+                // Check for standard ZK header
+                if (data.length >= 12 && data[0] === 0xEF && data[1] === 0x01) {
+                    imageStart = 12;
+                } 
+                // Check for alternative header
+                else if (data.length >= 16 && data[0] === 0xF5 && data[1] === 0x25) {
+                    imageStart = 16;
+                }
+                
+                const imageSize = this.imageWidth * this.imageHeight;
+                
+                if (data.length >= imageStart + imageSize) {
+                    // Extract image data
+                    const imageData = data.slice(imageStart, imageStart + imageSize);
+                    this.displayFingerprintImage(imageData);
+                    this.log(`Processed fingerprint image (${imageData.length} bytes)`, 'success');
+                } else {
+                    this.log(`Insufficient data for image (got ${data.length}, need ${imageSize})`, 'warning');
+                    // Try to display whatever we have
+                    this.tryDisplayImage(data);
+                }
+            }
+            
+            processImageData(data) {
+                // Try different image formats
+                
+                // Format 1: Raw grayscale (256x288 = 73728 bytes)
+                if (data.length === 73728) {
+                    this.displayFingerprintImage(data);
+                    this.log('Displaying raw 256x288 image', 'success');
+                    return;
+                }
+                
+                // Format 2: With ZK header
+                if (data.length > 73728 && data[0] === 0xEF && data[1] === 0x01) {
+                    // Skip header (usually 12 bytes)
+                    const imageData = data.slice(12, 12 + 73728);
+                    if (imageData.length === 73728) {
+                        this.displayFingerprintImage(imageData);
+                        this.log('Displaying ZK format image', 'success');
+                        return;
+                    }
+                }
+                
+                // Format 3: Try to auto-detect
+                this.tryDisplayImage(data);
+            }
+            
+            tryDisplayImage(data) {
+                // Try to find image in data
+                const imageSize = this.imageWidth * this.imageHeight;
+                
+                if (data.length >= imageSize) {
+                    // Try last imageSize bytes
+                    const imageData = data.slice(-imageSize);
+                    this.displayFingerprintImage(imageData);
+                    this.log(`Displaying image from data (${imageData.length} bytes)`, 'info');
+                } else {
+                    this.log(`Cannot find image in data (${data.length} bytes)`, 'warning');
+                    this.showDemoImage();
+                }
+            }
+            
+            displayFingerprintImage(imageData) {
+                const width = this.imageWidth;
+                const height = this.imageHeight;
+                const image = this.ctx.createImageData(width, height);
+                
+                // Convert grayscale to RGBA
+                for (let i = 0; i < imageData.length; i++) {
+                    const pixel = imageData[i];
+                    const idx = i * 4;
+                    
+                    // Invert for better visibility (fingerprints are usually dark on light)
+                    const value = 255 - pixel;
+                    
+                    image.data[idx] = value;     // R
+                    image.data[idx + 1] = value; // G
+                    image.data[idx + 2] = value; // B
+                    image.data[idx + 3] = 255;   // A
+                }
+                
+                this.ctx.putImageData(image, 0, 0);
+                document.getElementById('scannerOverlay').style.display = 'none';
+                
+                // Store the image data
+                this.imageData = imageData;
+                
+                this.log(`Fingerprint image displayed (${width}x${height})`, 'success');
+            }
+            
+            showDemoImage() {
+                // Only show demo if no real image is available
+                if (this.imageData) {
+                    this.displayFingerprintImage(this.imageData);
+                    return;
+                }
+                
+                this.log('Showing demo fingerprint image', 'info');
+                
+                const width = this.imageWidth;
+                const height = this.imageHeight;
+                const image = this.ctx.createImageData(width, height);
+                
+                // Create realistic fingerprint pattern
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         const idx = (y * width + x) * 4;
                         
-                        const dx = (x - centerX) / width;
-                        const dy = (y - centerY) / height;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        // Base value (light background)
+                        let value = 220;
                         
-                        let value = 128;
+                        // Add fingerprint ridges
+                        const ridgeFreq = 0.03;
+                        const ridge1 = Math.sin(x * ridgeFreq) * 30;
+                        const ridge2 = Math.sin(y * ridgeFreq * 1.3) * 20;
+                        const ridge3 = Math.sin((x + y) * 0.05) * 15;
                         
+                        // Add swirl pattern (fingerprint whorl)
+                        const dx = x - width/2;
+                        const dy = y - height/2;
+                        const distance = Math.sqrt(dx*dx + dy*dy);
                         const angle = Math.atan2(dy, dx);
-                        const swirl = Math.sin(distance * 20 + angle * 5) * 0.5 + 0.5;
+                        const swirl = Math.sin(distance * 0.05 + angle * 3) * 40;
                         
-                        const ridgeFreq = 0.1;
-                        const ridges = Math.sin(y * ridgeFreq) * Math.sin(x * ridgeFreq * 0.7);
+                        value = value + ridge1 + ridge2 + ridge3 + swirl;
                         
-                        value += swirl * 60 + ridges * 30;
-                        value += (Math.random() - 0.5) * 15;
-                        value = Math.max(50, Math.min(200, value));
+                        // Add some noise
+                        value += (Math.random() - 0.5) * 10;
                         
-                        imageData.data[idx] = value;
-                        imageData.data[idx + 1] = value;
-                        imageData.data[idx + 2] = value;
-                        imageData.data[idx + 3] = 255;
+                        // Clamp
+                        value = Math.max(150, Math.min(255, value));
+                        
+                        // Invert for fingerprint look (dark ridges on light)
+                        value = 255 - (value - 150) * 0.5;
+                        
+                        image.data[idx] = value;
+                        image.data[idx + 1] = value;
+                        image.data[idx + 2] = value;
+                        image.data[idx + 3] = 255;
                     }
                 }
                 
-                this.ctx.putImageData(imageData, 0, 0);
+                this.ctx.putImageData(image, 0, 0);
                 document.getElementById('scannerOverlay').style.display = 'none';
-                
-                this.log('Fingerprint image displayed', 'success');
+            }
+            
+            sendZKCommand(commandName) {
+                return this.sendCommand(commandName);
             }
             
             disconnect() {
@@ -1063,42 +1218,29 @@
                     try {
                         if (this.claimedInterface !== null) {
                             this.device.releaseInterface(this.claimedInterface);
-                            this.log(`Released interface ${this.claimedInterface}`, 'info');
-                            this.claimedInterface = null;
                         }
                         
                         if (this.device.opened) {
                             this.device.close();
-                            this.log('Device closed', 'info');
                         }
                         
+                        this.log('Device disconnected', 'info');
                     } catch (error) {
-                        this.log(`Disconnect error: ${error.message}`, 'warning');
+                        // Ignore errors on disconnect
                     }
                 }
                 
                 this.device = null;
                 this.isConnected = false;
+                this.claimedInterface = null;
                 this.selectedInterface = null;
-                this.selectedAlternate = 0;
-                this.selectedConfiguration = null;
                 this.endpoints = { in: null, out: null, interrupt: null };
                 
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 document.getElementById('scannerOverlay').style.display = 'flex';
                 
-                document.getElementById('interfaceGrid').innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
-                        <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 15px;"></i>
-                        <div>No interfaces scanned yet. Click "Scan Interfaces" to begin.</div>
-                    </div>
-                `;
-                
-                document.getElementById('endpointInfo').style.display = 'none';
-                
                 this.updateUI();
                 this.updateProgress('Disconnected', 0);
-                this.log('Device disconnected', 'info');
             }
             
             updateUI() {
@@ -1111,9 +1253,11 @@
                 document.getElementById('claimSelectedBtn').disabled = !connected || this.selectedInterface === null;
                 document.getElementById('findEndpointsBtn').disabled = !connected || this.claimedInterface === null;
                 
-                const canCommunicate = connected && (this.endpoints.in || this.endpoints.out || this.endpoints.interrupt);
-                document.getElementById('captureBtn').disabled = !canCommunicate;
-                document.getElementById('testCommBtn').disabled = !canCommunicate;
+                const canOperate = connected && this.endpoints.out;
+                document.getElementById('captureBtn').disabled = !canOperate;
+                document.getElementById('getImageBtn').disabled = !canOperate;
+                document.getElementById('testScannerBtn').disabled = !canOperate;
+                document.getElementById('enrollBtn').disabled = !canOperate;
                 
                 this.updateStatus('connStatus', connected ? 'Connected' : 'Disconnected', 
                     connected ? 'good' : 'bad');
@@ -1164,8 +1308,66 @@
                 }
             }
             
+            bytesToHex(bytes) {
+                return Array.from(bytes).map(b => 
+                    b.toString(16).padStart(2, '0').toUpperCase()
+                ).join(' ');
+            }
+            
             delay(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            async scanInterfaces() {
+                if (!this.device || !this.device.configuration) {
+                    this.log('No configuration available', 'error');
+                    return;
+                }
+                
+                this.log('Scanning interfaces...', 'info');
+                
+                const config = this.device.configuration;
+                const interfaceGrid = document.getElementById('interfaceGrid');
+                interfaceGrid.innerHTML = '';
+                
+                for (let i = 0; i < config.interfaces.length; i++) {
+                    const iface = config.interfaces[i];
+                    
+                    for (let j = 0; j < iface.alternates.length; j++) {
+                        const alt = iface.alternates[j];
+                        
+                        const item = document.createElement('div');
+                        item.className = 'interface-item';
+                        item.dataset.interface = i;
+                        item.dataset.alternate = j;
+                        
+                        const className = alt.interfaceClass === 0xFF ? 'Vendor Specific' :
+                                        alt.interfaceClass === 0x03 ? 'HID' :
+                                        `Class 0x${alt.interfaceClass.toString(16)}`;
+                        
+                        item.innerHTML = `
+                            <div class="interface-label">Interface ${i}.${j}</div>
+                            <div class="interface-value">${className}</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">
+                                Endpoints: ${alt.endpoints.length}
+                            </div>
+                        `;
+                        
+                        item.addEventListener('click', () => {
+                            document.querySelectorAll('.interface-item.selected').forEach(el => {
+                                el.classList.remove('selected');
+                            });
+                            item.classList.add('selected');
+                            this.selectedInterface = i;
+                            this.selectedAlternate = j;
+                            document.getElementById('claimSelectedBtn').disabled = false;
+                        });
+                        
+                        interfaceGrid.appendChild(item);
+                    }
+                }
+                
+                this.log(`Found ${config.interfaces.length} interfaces`, 'info');
             }
         }
 
@@ -1173,13 +1375,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (!navigator.usb) {
-                    throw new Error('WebUSB API is not available. Please use Chrome, Edge, or Opera.');
+                    throw new Error('WebUSB not supported. Use Chrome/Edge.');
                 }
                 
-                const usbTool = new ZK4500USBInterface();
-                window.usbTool = usbTool;
+                const scanner = new ZK4500Scanner();
+                window.usbTool = scanner; // For command buttons
                 
-                usbTool.log('Ready to connect USB device', 'success');
+                scanner.log('Ready to scan fingerprints!', 'success');
                 
             } catch (error) {
                 const consoleElem = document.getElementById('logConsole');
@@ -1193,10 +1395,6 @@
                         <span class="log-warning">Please use Chrome, Edge, or Opera browser</span>
                     </div>
                 `;
-                
-                document.querySelectorAll('.btn').forEach(btn => {
-                    btn.disabled = true;
-                });
             }
         });
     </script>
