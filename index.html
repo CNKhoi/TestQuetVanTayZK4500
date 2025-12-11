@@ -781,8 +781,8 @@
                             endpointItem.className = 'endpoint-item';
                             
                             let typeColor = getComputedStyle(document.body).getPropertyValue('--primary').trim();
-                            if (endpoint.type === 'bulk') typeColor = var('--success');
-                            if (endpoint.type === 'interrupt') typeColor = var('--warning');
+                            if (endpoint.type === 'bulk') typeColor = getComputedStyle(document.body).getPropertyValue('--success').trim();
+                            if (endpoint.type === 'interrupt') typeColor = getComputedStyle(document.body).getPropertyValue('--warning').trim();
                             
                             endpointItem.innerHTML = `
                                 <div>
@@ -1309,4 +1309,5 @@
     </script>
 </body>
 </html>
+
 
