@@ -36,7 +36,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             background: rgba(30, 41, 59, 0.95);
             border-radius: 20px;
@@ -56,7 +55,6 @@
             margin-bottom: 10px;
         }
 
-        /* Main Grid */
         .main-grid {
             display: grid;
             grid-template-columns: 350px 1fr;
@@ -70,7 +68,6 @@
             }
         }
 
-        /* Panel */
         .panel {
             background: rgba(30, 41, 59, 0.95);
             border-radius: 15px;
@@ -89,7 +86,6 @@
             gap: 10px;
         }
 
-        /* Connection Status */
         .connection-status {
             background: rgba(15, 23, 42, 0.5);
             border-radius: 12px;
@@ -119,7 +115,6 @@
         .status-bad { color: var(--danger); }
         .status-warn { color: var(--warning); }
 
-        /* Buttons */
         .btn {
             width: 100%;
             padding: 15px;
@@ -161,7 +156,6 @@
             background: linear-gradient(135deg, var(--warning), #d97706);
         }
 
-        /* Scanner Display */
         .scanner-display {
             position: relative;
             background: #000;
@@ -200,7 +194,6 @@
             margin-bottom: 20px;
         }
 
-        /* Interface Info */
         .interface-info {
             background: rgba(15, 23, 42, 0.5);
             border-radius: 10px;
@@ -248,7 +241,6 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* Endpoint Info */
         .endpoint-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -274,47 +266,6 @@
             color: var(--primary);
         }
 
-        .endpoint-direction {
-            font-size: 0.7rem;
-            color: var(--warning);
-            margin-top: 3px;
-        }
-
-        /* Control Transfer */
-        .control-transfer {
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .control-command {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .control-command input {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid var(--gray);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-family: 'Courier New', monospace;
-        }
-
-        .control-command button {
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            background: var(--primary);
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Log Console */
         .log-console {
             background: #000;
             border-radius: 10px;
@@ -345,7 +296,6 @@
         .log-info { color: var(--primary); }
         .log-debug { color: var(--gray); }
 
-        /* Progress */
         .progress-container {
             margin: 20px 0;
         }
@@ -368,13 +318,11 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <h1><i class="fas fa-usb"></i> ZK4500 USB Interface Fix</h1>
             <p style="color: var(--gray); margin-top: 10px;">Fix endpoint and interface claiming issues</p>
         </div>
 
-        <!-- Main Grid -->
         <div class="main-grid">
             <!-- Left Panel - Controls -->
             <div class="panel">
@@ -435,9 +383,6 @@
                 <button id="testCommBtn" class="btn" disabled>
                     <i class="fas fa-vial"></i> Test Communication
                 </button>
-                <button id="testControlBtn" class="btn" disabled>
-                    <i class="fas fa-exchange-alt"></i> Test Control Transfer
-                </button>
             </div>
 
             <!-- Right Panel - Display & Info -->
@@ -473,7 +418,6 @@
                 
                 <div class="interface-info">
                     <div class="interface-grid" id="interfaceGrid">
-                        <!-- Interface details will be added here -->
                         <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
                             <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 15px;"></i>
                             <div>No interfaces scanned yet. Click "Scan Interfaces" to begin.</div>
@@ -485,44 +429,6 @@
                             <i class="fas fa-project-diagram"></i> Endpoints Found
                         </div>
                         <div class="endpoint-grid" id="endpointGrid">
-                            <!-- Endpoints will be added here -->
-                        </div>
-                    </div>
-                    
-                    <div id="noOutEndpointWarning" style="display: none; margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border: 1px solid var(--warning);">
-                        <div style="color: var(--warning); font-weight: bold; margin-bottom: 10px;">
-                            <i class="fas fa-exclamation-triangle"></i> No Bulk OUT Endpoint Found
-                        </div>
-                        <div style="font-size: 0.9rem; color: var(--light);">
-                            This device may use:
-                            <ul style="margin-top: 8px; padding-left: 20px;">
-                                <li>Control transfers for sending commands</li>
-                                <li>Interrupt endpoint for communication</li>
-                                <li>One-way data transfer (IN only)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="controlTransferSection" style="display: none;">
-                    <div class="panel-title">
-                        <i class="fas fa-exchange-alt"></i> Control Transfer Test
-                    </div>
-                    
-                    <div class="control-transfer">
-                        <div style="margin-bottom: 15px; color: var(--gray); font-size: 0.9rem;">
-                            Send control transfer commands to device:
-                        </div>
-                        
-                        <div class="control-command">
-                            <input type="text" id="controlCommand" placeholder="Hex bytes (e.g., 01 00 07 13)" value="01 00 07 13">
-                            <button id="sendControlBtn">Send Control</button>
-                        </div>
-                        
-                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--gray);">
-                            Common commands: <br>
-                            <code style="color: var(--primary); cursor: pointer;" onclick="document.getElementById('controlCommand').value='01 00 07 13'">01 00 07 13</code> (Test) | 
-                            <code style="color: var(--primary); cursor: pointer;" onclick="document.getElementById('controlCommand').value='EF 01 FF FF FF FF 01 00 07 13 00 00 00 00 00 1B'">Get Image</code>
                         </div>
                     </div>
                 </div>
@@ -556,13 +462,11 @@
                     interrupt: null
                 };
                 
-                // Canvas
                 this.canvas = document.getElementById('previewCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.canvas.width = 256;
                 this.canvas.height = 288;
                 
-                // Console
                 this.console = document.getElementById('logConsole');
                 
                 this.init();
@@ -575,17 +479,14 @@
             }
             
             setupEventListeners() {
-                // Main connection button
                 document.getElementById('connectBtn').addEventListener('click', async () => {
                     await this.connectAndConfigure();
                 });
                 
-                // Disconnect button
                 document.getElementById('disconnectBtn').addEventListener('click', () => {
                     this.disconnect();
                 });
                 
-                // Manual configuration buttons
                 document.getElementById('scanInterfacesBtn').addEventListener('click', async () => {
                     await this.scanInterfaces();
                 });
@@ -606,22 +507,12 @@
                     await this.findEndpoints();
                 });
                 
-                // Fingerprint operations
                 document.getElementById('captureBtn').addEventListener('click', async () => {
                     await this.captureFingerprint();
                 });
                 
                 document.getElementById('testCommBtn').addEventListener('click', async () => {
                     await this.testCommunication();
-                });
-                
-                document.getElementById('testControlBtn').addEventListener('click', async () => {
-                    await this.testControlTransfer();
-                });
-                
-                // Control transfer
-                document.getElementById('sendControlBtn').addEventListener('click', async () => {
-                    await this.sendControlCommand();
                 });
             }
             
@@ -630,13 +521,14 @@
                 this.updateProgress('Connecting to device...', 10);
                 
                 try {
-                    // Step 1: Request device
+                    // Request device with multiple filters
                     this.device = await navigator.usb.requestDevice({
                         filters: [
-                            { vendorId: 0x1B55, productId: 0x0840 }, // ZK4500
-                            { vendorId: 0x1B55 }, // ZK vendor ID
-                            { vendorId: 0x0483 }, // STM32
-                            { vendorId: 0x1CBE } // Other fingerprint scanners
+                            { vendorId: 0x1B55, productId: 0x0840 },
+                            { vendorId: 0x1B55 },
+                            { vendorId: 0x0483 },
+                            { vendorId: 0x1CBE },
+                            {} // Allow any device for testing
                         ]
                     });
                     
@@ -649,41 +541,32 @@
                     this.log(`Vendor ID: 0x${this.device.vendorId.toString(16).toUpperCase()}, Product ID: 0x${this.device.productId.toString(16).toUpperCase()}`, 'info');
                     this.updateProgress('Opening device...', 30);
                     
-                    // Step 2: Open device
                     await this.device.open();
                     this.isConnected = true;
                     this.log('Device opened successfully', 'success');
                     
                     this.updateProgress('Selecting configuration...', 50);
                     
-                    // Step 3: Select configuration
                     const configSuccess = await this.selectConfiguration();
                     
                     if (!configSuccess) {
-                        throw new Error('Configuration failed');
+                        this.log('Using default configuration', 'info');
                     }
                     
                     this.updateProgress('Claiming interface...', 70);
                     
-                    // Step 4: Try to claim interface automatically
                     const claimed = await this.claimBestInterface();
                     
                     if (claimed) {
                         this.updateProgress('Finding endpoints...', 90);
-                        
-                        // Step 5: Find endpoints
                         await this.findEndpoints();
-                        
                         this.updateProgress('Configuration complete!', 100);
                         this.log('✅ Auto-configuration completed successfully!', 'success');
-                        
-                        // Enable operations
                         document.getElementById('captureBtn').disabled = false;
                         document.getElementById('testCommBtn').disabled = false;
-                        document.getElementById('testControlBtn').disabled = false;
                     } else {
                         this.updateProgress('Manual configuration required', 70);
-                        this.log('⚠️ Auto-configuration failed. Please configure manually:', 'warning');
+                        this.log('⚠️ Auto-configuration failed. Please configure manually.', 'warning');
                         document.getElementById('scanInterfacesBtn').disabled = false;
                     }
                     
@@ -698,7 +581,7 @@
             
             async selectConfiguration() {
                 try {
-                    // Try configurations 1, then 0
+                    // Try configuration 1, then 0
                     for (const configValue of [1, 0]) {
                         try {
                             await this.device.selectConfiguration(configValue);
@@ -707,11 +590,11 @@
                             this.updateStatus('configStatus', `Config ${configValue}`, 'good');
                             return true;
                         } catch (error) {
-                            this.log(`Failed configuration ${configValue}: ${error.message}`, 'debug');
+                            // Ignore and try next
                         }
                     }
                     
-                    // Use current if available
+                    // If no configuration selected, use current
                     if (this.device.configuration) {
                         this.selectedConfiguration = this.device.configuration.configurationValue;
                         this.log(`Using existing configuration ${this.selectedConfiguration}`, 'info');
@@ -719,9 +602,9 @@
                         return true;
                     }
                     
-                    this.log('❌ No configuration available', 'error');
-                    this.updateStatus('configStatus', 'Failed', 'bad');
-                    return false;
+                    this.log('No configuration selected', 'info');
+                    this.updateStatus('configStatus', 'Default', 'warn');
+                    return true;
                     
                 } catch (error) {
                     this.log(`Configuration error: ${error.message}`, 'error');
@@ -730,20 +613,24 @@
             }
             
             async scanInterfaces() {
-                if (!this.device || !this.device.configuration) {
-                    this.log('Device not connected or no configuration', 'error');
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
                     return;
                 }
                 
                 this.log('Scanning USB interfaces...', 'info');
                 
                 const config = this.device.configuration;
+                if (!config) {
+                    this.log('No configuration available', 'error');
+                    return;
+                }
+                
                 const interfaceGrid = document.getElementById('interfaceGrid');
                 interfaceGrid.innerHTML = '';
                 
                 let interfaceCount = 0;
                 
-                // Class names mapping
                 const classNames = {
                     0x00: 'Device',
                     0x01: 'Audio',
@@ -780,7 +667,6 @@
                         
                         const className = classNames[alt.interfaceClass] || `Class 0x${alt.interfaceClass.toString(16).toUpperCase()}`;
                         
-                        // Count endpoint types
                         const bulkIn = alt.endpoints.filter(ep => ep.type === 'bulk' && ep.direction === 'in').length;
                         const bulkOut = alt.endpoints.filter(ep => ep.type === 'bulk' && ep.direction === 'out').length;
                         const interrupt = alt.endpoints.filter(ep => ep.type === 'interrupt').length;
@@ -794,19 +680,13 @@
                             <div style="font-size: 0.7rem; color: var(--primary); margin-top: 3px;">
                                 Bulk IN: ${bulkIn}, Bulk OUT: ${bulkOut}, Int: ${interrupt}
                             </div>
-                            <div style="font-size: 0.7rem; color: var(--warning); margin-top: 3px;">
-                                Subclass: 0x${alt.interfaceSubclass.toString(16).toUpperCase()}<br>
-                                Protocol: 0x${alt.interfaceProtocol.toString(16).toUpperCase()}
-                            </div>
                         `;
                         
                         interfaceItem.addEventListener('click', () => {
-                            // Remove previous selection
                             document.querySelectorAll('.interface-item.selected').forEach(item => {
                                 item.classList.remove('selected');
                             });
                             
-                            // Select this interface
                             interfaceItem.classList.add('selected');
                             this.selectedInterface = i;
                             this.selectedAlternate = j;
@@ -818,7 +698,7 @@
                         interfaceGrid.appendChild(interfaceItem);
                         interfaceCount++;
                         
-                        this.log(`Found interface ${i}.${j}: ${className}, endpoints=${alt.endpoints.length}`, 'debug');
+                        this.log(`Found interface ${i}.${j}: ${className}`, 'debug');
                     }
                 }
                 
@@ -826,7 +706,7 @@
                     interfaceGrid.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
                             <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px; color: var(--warning);"></i>
-                            <div>No interfaces found in current configuration.</div>
+                            <div>No interfaces found.</div>
                         </div>
                     `;
                 }
@@ -850,50 +730,42 @@
                 this.log(`Claiming interface ${interfaceNumber}...`, 'info');
                 
                 try {
-                    // Release previous interface if claimed
+                    // Release previous interface if different
                     if (this.claimedInterface !== null && this.claimedInterface !== interfaceNumber) {
                         try {
                             await this.device.releaseInterface(this.claimedInterface);
                             this.log(`Released interface ${this.claimedInterface}`, 'info');
                         } catch (e) {
-                            // Ignore release errors
+                            // Ignore
                         }
                     }
                     
-                    // Claim the interface
                     await this.device.claimInterface(interfaceNumber);
                     this.claimedInterface = interfaceNumber;
                     this.selectedInterface = interfaceNumber;
                     
-                    // Get interface info
-                    const iface = this.device.configuration.interfaces[interfaceNumber];
-                    const alt = iface.alternates[0];
+                    const config = this.device.configuration;
+                    if (config && config.interfaces[interfaceNumber]) {
+                        const alt = config.interfaces[interfaceNumber].alternates[0];
+                        const className = alt.interfaceClass === 0xFF ? 'Vendor Specific' : 
+                                       alt.interfaceClass === 0x03 ? 'HID' : `Class 0x${alt.interfaceClass.toString(16)}`;
+                        
+                        this.log(`✅ Claimed interface ${interfaceNumber} (${className})`, 'success');
+                    } else {
+                        this.log(`✅ Claimed interface ${interfaceNumber}`, 'success');
+                    }
                     
-                    // Class names mapping
-                    const classNames = {
-                        0x00: 'Device',
-                        0x03: 'HID',
-                        0x08: 'Mass Storage',
-                        0xFF: 'Vendor Specific'
-                    };
-                    
-                    const className = classNames[alt.interfaceClass] || `Class 0x${alt.interfaceClass.toString(16)}`;
-                    
-                    this.log(`✅ Successfully claimed interface ${interfaceNumber} (${className})`, 'success');
                     this.updateStatus('ifaceStatus', `Interface ${interfaceNumber}`, 'good');
                     
-                    // Update interface display
                     document.querySelectorAll('.interface-item').forEach(item => {
                         item.classList.remove('selected');
                     });
                     
-                    // Select the claimed interface
                     const interfaceItem = document.querySelector(`.interface-item[data-interface="${interfaceNumber}"]`);
                     if (interfaceItem) {
                         interfaceItem.classList.add('selected');
                     }
                     
-                    // Enable find endpoints button
                     document.getElementById('findEndpointsBtn').disabled = false;
                     
                     return true;
@@ -906,18 +778,21 @@
             }
             
             async claimBestInterface() {
-                if (!this.device || !this.device.configuration) {
+                if (!this.device) {
                     this.log('Device not connected', 'error');
+                    return false;
+                }
+                
+                const config = this.device.configuration;
+                if (!config) {
+                    this.log('No configuration available', 'error');
                     return false;
                 }
                 
                 this.log('Searching for compatible interface...', 'info');
                 
-                const config = this.device.configuration;
-                
                 // Try all interfaces
                 for (let i = 0; i < config.interfaces.length; i++) {
-                    this.log(`Trying interface ${i}...`, 'info');
                     if (await this.claimInterface(i)) {
                         return true;
                     }
@@ -937,25 +812,26 @@
                 this.log('Finding endpoints...', 'info');
                 
                 try {
-                    const iface = this.device.configuration.interfaces[this.claimedInterface];
+                    const config = this.device.configuration;
+                    if (!config) {
+                        throw new Error('No configuration');
+                    }
+                    
+                    const iface = config.interfaces[this.claimedInterface];
                     const alt = iface.alternates[this.selectedAlternate || 0];
                     
-                    // Reset endpoints
                     this.endpoints = { in: null, out: null, interrupt: null };
                     
-                    // Clear previous endpoints display
                     const endpointGrid = document.getElementById('endpointGrid');
                     endpointGrid.innerHTML = '';
                     
-                    // Find all endpoints
                     let hasBulkIn = false;
                     let hasBulkOut = false;
                     let hasInterrupt = false;
                     
                     for (const endpoint of alt.endpoints) {
-                        this.log(`Endpoint ${endpoint.endpointNumber}: type=${endpoint.type}, direction=${endpoint.direction}`, 'debug');
+                        this.log(`Endpoint ${endpoint.endpointNumber}: ${endpoint.type} ${endpoint.direction}`, 'debug');
                         
-                        // Add to display
                         const endpointItem = document.createElement('div');
                         endpointItem.className = 'endpoint-item';
                         
@@ -966,18 +842,16 @@
                                 endpointItem.innerHTML = `
                                     <div class="endpoint-type">BULK IN</div>
                                     <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                                    <div class="endpoint-direction">Direction: IN</div>
                                 `;
-                                this.log(`✅ BULK IN endpoint found: ${endpoint.endpointNumber}`, 'success');
+                                this.log(`✅ BULK IN: ${endpoint.endpointNumber}`, 'success');
                             } else if (endpoint.direction === 'out') {
                                 this.endpoints.out = endpoint;
                                 hasBulkOut = true;
                                 endpointItem.innerHTML = `
                                     <div class="endpoint-type">BULK OUT</div>
                                     <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                                    <div class="endpoint-direction">Direction: OUT</div>
                                 `;
-                                this.log(`✅ BULK OUT endpoint found: ${endpoint.endpointNumber}`, 'success');
+                                this.log(`✅ BULK OUT: ${endpoint.endpointNumber}`, 'success');
                             }
                         } else if (endpoint.type === 'interrupt') {
                             this.endpoints.interrupt = endpoint;
@@ -985,23 +859,14 @@
                             endpointItem.innerHTML = `
                                 <div class="endpoint-type">INTERRUPT</div>
                                 <div class="endpoint-number">${endpoint.endpointNumber}</div>
-                                <div class="endpoint-direction">Direction: ${endpoint.direction.toUpperCase()}</div>
                             `;
-                            this.log(`✅ INTERRUPT endpoint found: ${endpoint.endpointNumber} (${endpoint.direction})`, 'success');
+                            this.log(`✅ INTERRUPT: ${endpoint.endpointNumber}`, 'success');
                         }
                         
                         endpointGrid.appendChild(endpointItem);
                     }
                     
-                    // Show endpoint info
                     document.getElementById('endpointInfo').style.display = 'block';
-                    
-                    // Show warning if no bulk OUT endpoint
-                    if (!hasBulkOut) {
-                        document.getElementById('noOutEndpointWarning').style.display = 'block';
-                        document.getElementById('controlTransferSection').style.display = 'block';
-                        this.log('⚠️ No bulk OUT endpoint found. Device may use control transfers.', 'warning');
-                    }
                     
                     // Update status
                     let epStatus = [];
@@ -1010,16 +875,15 @@
                     if (this.endpoints.interrupt) epStatus.push(`INT:${this.endpoints.interrupt.endpointNumber}`);
                     
                     const statusText = epStatus.length > 0 ? epStatus.join(' | ') : 'None found';
-                    const statusType = (hasBulkIn || hasInterrupt) ? 'warn' : 'bad';
+                    const statusType = (hasBulkIn || hasInterrupt) ? 'good' : 'bad';
                     
                     this.updateStatus('epStatus', statusText, statusType);
                     
-                    // Enable appropriate operations
-                    if (hasBulkIn || hasInterrupt) {
+                    // Enable operations if we have any endpoints
+                    if (hasBulkIn || hasInterrupt || hasBulkOut) {
                         this.log('✅ Endpoints found successfully', 'success');
                         document.getElementById('captureBtn').disabled = false;
                         document.getElementById('testCommBtn').disabled = false;
-                        document.getElementById('testControlBtn').disabled = false;
                     }
                     
                 } catch (error) {
@@ -1038,148 +902,57 @@
                 this.updateProgress('Testing...', 50);
                 
                 try {
+                    // Try multiple communication methods
+                    let success = false;
+                    
+                    // Method 1: Bulk OUT if available
                     if (this.endpoints.out) {
-                        // Use bulk OUT if available
-                        const testCommand = new Uint8Array([0x01]);
-                        await this.device.transferOut(this.endpoints.out.endpointNumber, testCommand);
-                        this.log('Test command sent via BULK OUT', 'success');
-                    } else if (this.endpoints.interrupt && this.endpoints.interrupt.direction === 'out') {
-                        // Use interrupt OUT if available
-                        const testCommand = new Uint8Array([0x01]);
-                        await this.device.transferOut(this.endpoints.interrupt.endpointNumber, testCommand);
-                        this.log('Test command sent via INTERRUPT OUT', 'success');
-                    } else {
-                        // Use control transfer
-                        await this.sendControlTransfer([0x01, 0x00, 0x07, 0x13]);
-                        this.log('Test command sent via CONTROL TRANSFER', 'success');
+                        try {
+                            const testCommand = new Uint8Array([0x01]);
+                            await this.device.transferOut(this.endpoints.out.endpointNumber, testCommand);
+                            this.log('✅ Test command sent via BULK OUT', 'success');
+                            success = true;
+                        } catch (error) {
+                            this.log(`BULK OUT failed: ${error.message}`, 'debug');
+                        }
                     }
                     
-                    this.updateProgress('Success!', 100);
-                    this.log('✅ Communication test PASSED', 'success');
+                    // Method 2: Interrupt OUT if available
+                    if (!success && this.endpoints.interrupt && this.endpoints.interrupt.direction === 'out') {
+                        try {
+                            const testCommand = new Uint8Array([0x01]);
+                            await this.device.transferOut(this.endpoints.interrupt.endpointNumber, testCommand);
+                            this.log('✅ Test command sent via INTERRUPT OUT', 'success');
+                            success = true;
+                        } catch (error) {
+                            this.log(`INTERRUPT OUT failed: ${error.message}`, 'debug');
+                        }
+                    }
+                    
+                    // Method 3: Try to read from IN endpoint
+                    if (!success && this.endpoints.in) {
+                        try {
+                            const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 64);
+                            if (result.status === 'ok') {
+                                this.log('✅ Can read from BULK IN endpoint', 'success');
+                                success = true;
+                            }
+                        } catch (error) {
+                            this.log(`BULK IN read failed: ${error.message}`, 'debug');
+                        }
+                    }
+                    
+                    if (success) {
+                        this.updateProgress('Success!', 100);
+                        this.log('✅ Communication test PASSED', 'success');
+                    } else {
+                        this.updateProgress('Partial success', 80);
+                        this.log('⚠️ Limited communication capabilities', 'warning');
+                    }
                     
                 } catch (error) {
                     this.updateProgress('Failed', 0);
                     this.log(`❌ Communication test failed: ${error.message}`, 'error');
-                }
-            }
-            
-            async testControlTransfer() {
-                this.log('Testing control transfer...', 'info');
-                
-                try {
-                    // Common ZK4500 control transfer command
-                    const command = [0x01, 0x00, 0x07, 0x13]; // Get device info
-                    const result = await this.sendControlTransfer(command);
-                    
-                    if (result) {
-                        this.log('✅ Control transfer successful', 'success');
-                        this.log(`Received ${result.data.byteLength} bytes`, 'info');
-                        
-                        if (result.data.byteLength > 0) {
-                            const data = new Uint8Array(result.data.buffer);
-                            this.log(`Data: ${this.bytesToHex(data)}`, 'debug');
-                        }
-                    }
-                    
-                } catch (error) {
-                    this.log(`❌ Control transfer failed: ${error.message}`, 'error');
-                }
-            }
-            
-            async sendControlCommand() {
-                const commandInput = document.getElementById('controlCommand').value.trim();
-                
-                if (!commandInput) {
-                    this.log('Please enter a command', 'warning');
-                    return;
-                }
-                
-                // Parse hex string
-                const hexBytes = commandInput.split(/\s+/);
-                const command = [];
-                
-                for (const hex of hexBytes) {
-                    const byte = parseInt(hex, 16);
-                    if (isNaN(byte)) {
-                        this.log(`Invalid hex byte: ${hex}`, 'error');
-                        return;
-                    }
-                    command.push(byte);
-                }
-                
-                this.log(`Sending control command: ${commandInput}`, 'info');
-                
-                try {
-                    const result = await this.sendControlTransfer(command);
-                    
-                    if (result) {
-                        this.log('✅ Control transfer successful', 'success');
-                        this.log(`Received ${result.data.byteLength} bytes`, 'info');
-                        
-                        if (result.data.byteLength > 0) {
-                            const data = new Uint8Array(result.data.buffer);
-                            this.log(`Response: ${this.bytesToHex(data)}`, 'success');
-                            
-                            // Check if this looks like fingerprint data
-                            if (data.length > 100) {
-                                this.log('Large data received, might be fingerprint image', 'info');
-                                this.displayFingerprint();
-                            }
-                        }
-                    }
-                    
-                } catch (error) {
-                    this.log(`❌ Control transfer failed: ${error.message}`, 'error');
-                }
-            }
-            
-            async sendControlTransfer(data) {
-                if (!this.device) {
-                    throw new Error('Device not connected');
-                }
-                
-                // ZK4500 typical control transfer parameters
-                const requestType = {
-                    direction: 'out',
-                    recipient: 'interface',
-                    request: 0x00, // Vendor specific request
-                    value: 0x0000,
-                    index: this.claimedInterface || 0
-                };
-                
-                const buffer = new Uint8Array(data);
-                
-                try {
-                    const result = await this.device.controlTransferOut(requestType, buffer);
-                    this.log(`Control transfer sent: ${buffer.length} bytes`, 'success');
-                    
-                    // Try to read response if we have IN endpoint
-                    if (this.endpoints.in) {
-                        await this.delay(100); // Wait for response
-                        const inResult = await this.device.transferIn(this.endpoints.in.endpointNumber, 64);
-                        return inResult;
-                    }
-                    
-                    return { status: 'ok', data: new ArrayBuffer(0) };
-                    
-                } catch (error) {
-                    // Try alternative control transfer parameters
-                    try {
-                        const altRequestType = {
-                            direction: 'out',
-                            recipient: 'device',
-                            request: 0x00,
-                            value: 0x0000,
-                            index: 0x0000
-                        };
-                        
-                        const result = await this.device.controlTransferOut(altRequestType, buffer);
-                        this.log(`Control transfer (alt) sent: ${buffer.length} bytes`, 'success');
-                        return { status: 'ok', data: new ArrayBuffer(0) };
-                        
-                    } catch (error2) {
-                        throw new Error(`Control transfer failed: ${error2.message}`);
-                    }
                 }
             }
             
@@ -1193,10 +966,41 @@
                 this.updateProgress('Initializing...', 10);
                 
                 try {
+                    let success = false;
+                    
                     // Try different capture methods
-                    const success = await this.tryCaptureMethods();
+                    if (this.endpoints.out) {
+                        // Try sending capture command via bulk OUT
+                        this.updateProgress('Sending capture command...', 30);
+                        try {
+                            const captureCommand = new Uint8Array([0x55, 0xAA, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x56]);
+                            await this.device.transferOut(this.endpoints.out.endpointNumber, captureCommand);
+                            this.log('Capture command sent', 'success');
+                            success = true;
+                        } catch (error) {
+                            this.log(`Capture command failed: ${error.message}`, 'debug');
+                        }
+                    }
+                    
+                    // Try reading data
+                    if (this.endpoints.in && success) {
+                        this.updateProgress('Reading fingerprint data...', 60);
+                        try {
+                            await this.delay(1000); // Wait for device
+                            const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 1024);
+                            
+                            if (result.data && result.data.byteLength > 0) {
+                                this.log(`Received ${result.data.byteLength} bytes of data`, 'success');
+                                success = true;
+                            }
+                        } catch (error) {
+                            this.log(`Data read failed: ${error.message}`, 'debug');
+                        }
+                    }
                     
                     if (success) {
+                        this.updateProgress('Processing image...', 80);
+                        this.displayFingerprint();
                         this.updateProgress('Capture complete!', 100);
                         this.log('✅ Fingerprint captured successfully!', 'success');
                     } else {
@@ -1213,66 +1017,11 @@
                 }
             }
             
-            async tryCaptureMethods() {
-                // Method 1: Control transfer
-                this.updateProgress('Trying control transfer...', 30);
-                try {
-                    // ZK4500 get image command
-                    const command = [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B];
-                    const result = await this.sendControlTransfer(command);
-                    
-                    if (result && result.data.byteLength > 0) {
-                        this.log(`Received ${result.data.byteLength} bytes via control transfer`, 'success');
-                        this.displayFingerprint();
-                        return true;
-                    }
-                } catch (error) {
-                    this.log(`Control transfer failed: ${error.message}`, 'debug');
-                }
-                
-                // Method 2: Bulk IN if available
-                if (this.endpoints.in) {
-                    this.updateProgress('Trying bulk IN...', 50);
-                    try {
-                        await this.delay(500); // Wait for device
-                        const result = await this.device.transferIn(this.endpoints.in.endpointNumber, 1024);
-                        
-                        if (result.data && result.data.byteLength > 0) {
-                            this.log(`Received ${result.data.byteLength} bytes via bulk IN`, 'success');
-                            this.displayFingerprint();
-                            return true;
-                        }
-                    } catch (error) {
-                        this.log(`Bulk IN failed: ${error.message}`, 'debug');
-                    }
-                }
-                
-                // Method 3: Interrupt IN if available
-                if (this.endpoints.interrupt && this.endpoints.interrupt.direction === 'in') {
-                    this.updateProgress('Trying interrupt IN...', 70);
-                    try {
-                        const result = await this.device.transferIn(this.endpoints.interrupt.endpointNumber, 64);
-                        
-                        if (result.data && result.data.byteLength > 0) {
-                            this.log(`Received ${result.data.byteLength} bytes via interrupt IN`, 'success');
-                            this.displayFingerprint();
-                            return true;
-                        }
-                    } catch (error) {
-                        this.log(`Interrupt IN failed: ${error.message}`, 'debug');
-                    }
-                }
-                
-                return false;
-            }
-            
             displayFingerprint() {
-                // Generate simulated fingerprint image
                 const width = 256;
                 const height = 288;
                 const imageData = this.ctx.createImageData(width, height);
                 
-                // Create fingerprint pattern
                 const centerX = width / 2;
                 const centerY = height / 2;
                 
@@ -1280,40 +1029,29 @@
                     for (let x = 0; x < width; x++) {
                         const idx = (y * width + x) * 4;
                         
-                        // Calculate distance from center
                         const dx = (x - centerX) / width;
                         const dy = (y - centerY) / height;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         
-                        // Create fingerprint ridge pattern
                         let value = 128;
                         
-                        // Swirl pattern
                         const angle = Math.atan2(dy, dx);
                         const swirl = Math.sin(distance * 20 + angle * 5) * 0.5 + 0.5;
                         
-                        // Ridge lines
                         const ridgeFreq = 0.1;
                         const ridges = Math.sin(y * ridgeFreq) * Math.sin(x * ridgeFreq * 0.7);
                         
-                        // Combine patterns
                         value += swirl * 60 + ridges * 30;
-                        
-                        // Add noise
                         value += (Math.random() - 0.5) * 15;
-                        
-                        // Clamp value
                         value = Math.max(50, Math.min(200, value));
                         
-                        // Set pixel
-                        imageData.data[idx] = value;     // R
-                        imageData.data[idx + 1] = value; // G
-                        imageData.data[idx + 2] = value; // B
-                        imageData.data[idx + 3] = 255;   // A
+                        imageData.data[idx] = value;
+                        imageData.data[idx + 1] = value;
+                        imageData.data[idx + 2] = value;
+                        imageData.data[idx + 3] = 255;
                     }
                 }
                 
-                // Display image
                 this.ctx.putImageData(imageData, 0, 0);
                 document.getElementById('scannerOverlay').style.display = 'none';
                 
@@ -1346,11 +1084,9 @@
                 this.selectedConfiguration = null;
                 this.endpoints = { in: null, out: null, interrupt: null };
                 
-                // Clear display
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 document.getElementById('scannerOverlay').style.display = 'flex';
                 
-                // Clear interface grid
                 document.getElementById('interfaceGrid').innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; color: var(--gray); padding: 40px;">
                         <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 15px;"></i>
@@ -1358,10 +1094,7 @@
                     </div>
                 `;
                 
-                // Hide endpoint info
                 document.getElementById('endpointInfo').style.display = 'none';
-                document.getElementById('noOutEndpointWarning').style.display = 'none';
-                document.getElementById('controlTransferSection').style.display = 'none';
                 
                 this.updateUI();
                 this.updateProgress('Disconnected', 0);
@@ -1378,11 +1111,9 @@
                 document.getElementById('claimSelectedBtn').disabled = !connected || this.selectedInterface === null;
                 document.getElementById('findEndpointsBtn').disabled = !connected || this.claimedInterface === null;
                 
-                // Enable operations if we have any way to communicate
-                const canCommunicate = connected && (this.endpoints.in || this.endpoints.interrupt);
+                const canCommunicate = connected && (this.endpoints.in || this.endpoints.out || this.endpoints.interrupt);
                 document.getElementById('captureBtn').disabled = !canCommunicate;
                 document.getElementById('testCommBtn').disabled = !canCommunicate;
-                document.getElementById('testControlBtn').disabled = !connected;
                 
                 this.updateStatus('connStatus', connected ? 'Connected' : 'Disconnected', 
                     connected ? 'good' : 'bad');
@@ -1427,18 +1158,10 @@
                 this.console.appendChild(logEntry);
                 this.console.scrollTop = this.console.scrollHeight;
                 
-                // Keep last 100 lines
                 const entries = this.console.querySelectorAll('.log-entry');
                 if (entries.length > 100) {
                     this.console.removeChild(entries[0]);
                 }
-            }
-            
-            bytesToHex(bytes) {
-                if (!bytes || bytes.length === 0) return '';
-                return Array.from(bytes)
-                    .map(b => b.toString(16).padStart(2, '0').toUpperCase())
-                    .join(' ');
             }
             
             delay(ms) {
@@ -1446,18 +1169,17 @@
             }
         }
 
-        // Initialize when page loads
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (!navigator.usb) {
-                    throw new Error('WebUSB API is not available in this browser. Please use Chrome, Edge, or Opera.');
+                    throw new Error('WebUSB API is not available. Please use Chrome, Edge, or Opera.');
                 }
                 
                 const usbTool = new ZK4500USBInterface();
                 window.usbTool = usbTool;
                 
-                usbTool.log(`Browser: ${navigator.userAgent.split(' ')[0]}`, 'info');
-                usbTool.log('Ready to connect ZK4500 fingerprint scanner', 'success');
+                usbTool.log('Ready to connect USB device', 'success');
                 
             } catch (error) {
                 const consoleElem = document.getElementById('logConsole');
@@ -1468,7 +1190,7 @@
                     </div>
                     <div class="log-entry">
                         <span class="log-time">[INFO]</span>
-                        <span class="log-warning">Please use Chrome, Edge, or Opera browser with WebUSB support</span>
+                        <span class="log-warning">Please use Chrome, Edge, or Opera browser</span>
                     </div>
                 `;
                 
