@@ -325,6 +325,15 @@
             padding: 5px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        .endpoint-label {
+            color: var(--gray);
+        }
+
+        .endpoint-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -429,20 +438,20 @@
                 
                 <div class="device-info">
                     <div class="info-item">
-                        <span>Vendor ID:</span>
-                        <span id="vendorId" style="font-family: 'Courier New';">N/A</span>
+                        <span class="endpoint-label">Vendor ID:</span>
+                        <span id="vendorId" class="endpoint-value">N/A</span>
                     </div>
                     <div class="info-item">
-                        <span>Product ID:</span>
-                        <span id="productId" style="font-family: 'Courier New';">N/A</span>
+                        <span class="endpoint-label">Product ID:</span>
+                        <span id="productId" class="endpoint-value">N/A</span>
                     </div>
                     <div class="info-item">
-                        <span>Device Name:</span>
-                        <span id="deviceName">N/A</span>
+                        <span class="endpoint-label">Device Name:</span>
+                        <span id="deviceName" class="endpoint-value">N/A</span>
                     </div>
                     <div class="info-item">
-                        <span>Serial Number:</span>
-                        <span id="serialNumber">N/A</span>
+                        <span class="endpoint-label">Serial Number:</span>
+                        <span id="serialNumber" class="endpoint-value">N/A</span>
                     </div>
                 </div>
                 
@@ -689,7 +698,9 @@
                         if (this.claimedInterface !== null) {
                             try {
                                 await this.device.releaseInterface(this.claimedInterface);
-                            } catch (e) {}
+                            } catch (e) {
+                                // Ignore release errors
+                            }
                         }
                         
                         await this.device.claimInterface(i);
@@ -780,16 +791,22 @@
                             const endpointItem = document.createElement('div');
                             endpointItem.className = 'endpoint-item';
                             
-                            let typeColor = getComputedStyle(document.body).getPropertyValue('--primary').trim();
-                            if (endpoint.type === 'bulk') typeColor = getComputedStyle(document.body).getPropertyValue('--success').trim();
-                            if (endpoint.type === 'interrupt') typeColor = getComputedStyle(document.body).getPropertyValue('--warning').trim();
+                            // Determine color based on endpoint type
+                            let typeClass = '';
+                            if (endpoint.type === 'bulk') {
+                                typeClass = 'status-good';
+                            } else if (endpoint.type === 'interrupt') {
+                                typeClass = 'status-warning';
+                            } else {
+                                typeClass = 'status-info';
+                            }
                             
                             endpointItem.innerHTML = `
                                 <div>
                                     <span class="endpoint-type">Interface ${i}.${j} - ${endpoint.type.toUpperCase()} ${endpoint.direction.toUpperCase()}</span>
                                 </div>
                                 <div>
-                                    <span class="endpoint-number">Endpoint ${endpoint.endpointNumber}</span>
+                                    <span class="endpoint-number ${typeClass}">Endpoint ${endpoint.endpointNumber}</span>
                                 </div>
                             `;
                             
@@ -827,7 +844,9 @@
                         if (this.claimedInterface !== null) {
                             try {
                                 await this.device.releaseInterface(this.claimedInterface);
-                            } catch (e) {}
+                            } catch (e) {
+                                // Ignore release errors
+                            }
                         }
                         
                         // Claim new interface
@@ -1309,5 +1328,3 @@
     </script>
 </body>
 </html>
-
-
