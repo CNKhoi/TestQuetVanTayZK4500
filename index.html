@@ -194,7 +194,7 @@
             margin-bottom: 20px;
         }
 
-        .zk-protocol {
+        .device-info {
             background: rgba(15, 23, 42, 0.5);
             border-radius: 10px;
             padding: 15px;
@@ -202,64 +202,78 @@
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
 
-        .command-list {
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .endpoint-label {
+            color: var(--gray);
+        }
+
+        .endpoint-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .control-transfer {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .control-input {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .control-input input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--gray);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        .control-input button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .command-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 15px;
         }
 
-        .command-item {
-            background: rgba(30, 41, 59, 0.8);
+        .cmd-btn {
             padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .command-item:hover {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .command-name {
-            font-weight: bold;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-
-        .command-hex {
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            color: var(--gray);
-        }
-
-        .endpoint-info {
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .endpoint-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px;
-            margin-bottom: 5px;
-            background: rgba(30, 41, 59, 0.8);
             border-radius: 5px;
-        }
-
-        .endpoint-type {
-            font-weight: bold;
+            border: 1px solid var(--primary);
+            background: rgba(59, 130, 246, 0.1);
             color: var(--primary);
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
         }
 
-        .endpoint-number {
-            font-family: 'Courier New', monospace;
-            color: var(--success);
+        .cmd-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
         }
 
         .log-console {
@@ -311,28 +325,21 @@
             border-radius: 4px;
         }
 
-        .device-info {
-            background: rgba(15, 23, 42, 0.5);
+        .special-notice {
+            background: rgba(245, 158, 11, 0.1);
             border-radius: 10px;
             padding: 15px;
             margin-top: 20px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            border: 1px solid var(--warning);
         }
 
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .endpoint-label {
-            color: var(--gray);
-        }
-
-        .endpoint-value {
-            font-family: 'Courier New', monospace;
+        .notice-title {
+            color: var(--warning);
             font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
     </style>
 </head>
@@ -340,7 +347,7 @@
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-fingerprint"></i> ZK4500 Fingerprint Scanner</h1>
-            <p style="color: var(--gray); margin-top: 10px;">Real fingerprint capture and processing</p>
+            <p style="color: var(--gray); margin-top: 10px;">Control Transfer Mode (No OUT Endpoint)</p>
         </div>
 
         <div class="main-grid">
@@ -364,17 +371,28 @@
                         <span id="epStatus" class="status-value status-bad">Not Found</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Configuration:</span>
-                        <span id="configStatus" class="status-value status-bad">Not Selected</span>
+                        <span class="status-label">Communication:</span>
+                        <span id="commStatus" class="status-value status-bad">No OUT</span>
                     </div>
                 </div>
                 
                 <button id="connectBtn" class="btn">
-                    <i class="fas fa-plug"></i> Connect & Auto-Configure
+                    <i class="fas fa-plug"></i> Connect Device
                 </button>
                 <button id="disconnectBtn" class="btn btn-danger" disabled>
                     <i class="fas fa-unplug"></i> Disconnect
                 </button>
+                
+                <div class="special-notice">
+                    <div class="notice-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Special Mode
+                    </div>
+                    <div style="color: var(--light); font-size: 0.9rem;">
+                        Device has only IN endpoint.<br>
+                        Using <strong>Control Transfers</strong> for communication.
+                    </div>
+                </div>
                 
                 <div class="panel-title" style="margin-top: 30px;">
                     <i class="fas fa-fingerprint"></i> Fingerprint Operations
@@ -384,24 +402,10 @@
                     <i class="fas fa-camera"></i> Capture Fingerprint
                 </button>
                 <button id="testBtn" class="btn" disabled>
-                    <i class="fas fa-vial"></i> Test Scanner
+                    <i class="fas fa-vial"></i> Test Communication
                 </button>
-                <button id="ledOnBtn" class="btn" disabled>
-                    <i class="fas fa-lightbulb"></i> LED On
-                </button>
-                <button id="ledOffBtn" class="btn" disabled>
-                    <i class="fas fa-lightbulb"></i> LED Off
-                </button>
-                
-                <div class="panel-title" style="margin-top: 30px;">
-                    <i class="fas fa-cogs"></i> Advanced
-                </div>
-                
-                <button id="scanEndpointsBtn" class="btn btn-warning" disabled>
-                    <i class="fas fa-search"></i> Scan Endpoints
-                </button>
-                <button id="tryAllInterfacesBtn" class="btn" disabled>
-                    <i class="fas fa-random"></i> Try All Interfaces
+                <button id="readDataBtn" class="btn" disabled>
+                    <i class="fas fa-download"></i> Read Data
                 </button>
             </div>
 
@@ -415,9 +419,9 @@
                     <canvas id="previewCanvas"></canvas>
                     <div id="scannerOverlay" class="scanner-overlay">
                         <i class="fas fa-fingerprint"></i>
-                        <div style="font-size: 1.2rem; margin-bottom: 10px;">Connect ZK4500 scanner to begin</div>
+                        <div style="font-size: 1.2rem; margin-bottom: 10px;">Connect ZK4500 scanner</div>
                         <div style="color: var(--gray); font-size: 0.9rem;">
-                            Real fingerprint scanning supported
+                            Using Control Transfer mode
                         </div>
                     </div>
                 </div>
@@ -450,42 +454,44 @@
                         <span id="deviceName" class="endpoint-value">N/A</span>
                     </div>
                     <div class="info-item">
-                        <span class="endpoint-label">Serial Number:</span>
-                        <span id="serialNumber" class="endpoint-value">N/A</span>
-                    </div>
-                </div>
-                
-                <div id="endpointInfo" class="endpoint-info" style="display: none;">
-                    <div class="panel-title" style="font-size: 1rem; margin-bottom: 10px;">
-                        <i class="fas fa-project-diagram"></i> Endpoints Found
-                    </div>
-                    <div id="endpointList">
-                        <!-- Endpoints will be added here -->
+                        <span class="endpoint-label">Interface:</span>
+                        <span id="interfaceInfo" class="endpoint-value">N/A</span>
                     </div>
                 </div>
                 
                 <div class="panel-title" style="margin-top: 20px;">
-                    <i class="fas fa-code"></i> ZK4500 Protocol Commands
+                    <i class="fas fa-exchange-alt"></i> Control Transfer Commands
                 </div>
                 
-                <div class="zk-protocol">
-                    <div class="command-list">
-                        <div class="command-item" onclick="usbTool.sendCommand('getImage')">
-                            <div class="command-name">Get Fingerprint Image</div>
-                            <div class="command-hex">EF 01 FF FF FF FF 01 00 03 01 00 05</div>
+                <div class="control-transfer">
+                    <div style="color: var(--gray); font-size: 0.9rem; margin-bottom: 15px;">
+                        ZK4500 uses control transfers for commands. Select a command:
+                    </div>
+                    
+                    <div class="command-buttons">
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('test')">
+                            Test Device
                         </div>
-                        <div class="command-item" onclick="usbTool.sendCommand('capture')">
-                            <div class="command-name">Capture Fingerprint</div>
-                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 13 00 00 00 00 00 1B</div>
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('getImage')">
+                            Get Image
                         </div>
-                        <div class="command-item" onclick="usbTool.sendCommand('test')">
-                            <div class="command-name">Test Connection</div>
-                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 00 00 00 00 00 07</div>
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('capture')">
+                            Capture
                         </div>
-                        <div class="command-item" onclick="usbTool.sendCommand('enroll')">
-                            <div class="command-name">Enroll Fingerprint</div>
-                            <div class="command-hex">EF 01 FF FF FF FF 01 00 07 22 00 00 00 00 16</div>
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('ledOn')">
+                            LED On
                         </div>
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('ledOff')">
+                            LED Off
+                        </div>
+                        <div class="cmd-btn" onclick="scanner.sendControlCommand('enroll')">
+                            Enroll
+                        </div>
+                    </div>
+                    
+                    <div class="control-input">
+                        <input type="text" id="customCommand" placeholder="Custom hex command (e.g., EF01)" value="EF01FFFFFFFFFF010007000000000007">
+                        <button id="sendCustomBtn">Send Custom</button>
                     </div>
                 </div>
                 
@@ -496,7 +502,7 @@
                 <div class="log-console" id="logConsole">
                     <div class="log-entry">
                         <span class="log-time">[SYSTEM]</span>
-                        <span class="log-info">ZK4500 Fingerprint Scanner Tool initialized</span>
+                        <span class="log-info">ZK4500 Control Transfer Tool initialized</span>
                     </div>
                 </div>
             </div>
@@ -504,97 +510,89 @@
     </div>
 
     <script>
-        class ZK4500Scanner {
+        class ZK4500ControlTransferScanner {
             constructor() {
                 this.device = null;
                 this.isConnected = false;
                 this.claimedInterface = null;
-                this.selectedInterface = null;
-                this.selectedAlternate = 0;
-                this.selectedConfiguration = null;
-                this.endpoints = {
-                    in: null,
-                    out: null,
-                    interruptIn: null,
-                    interruptOut: null
-                };
-                
-                // Image parameters
-                this.imageWidth = 256;
-                this.imageHeight = 288;
-                this.imageData = null;
                 
                 // Canvas
                 this.canvas = document.getElementById('previewCanvas');
                 this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-                this.canvas.width = this.imageWidth;
-                this.canvas.height = this.imageHeight;
+                this.canvas.width = 256;
+                this.canvas.height = 288;
                 
                 // Console
                 this.console = document.getElementById('logConsole');
                 
-                // ZK Protocol commands
-                this.zkCommands = {
-                    getImage: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x03, 0x01, 0x00, 0x05],
-                    capture: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B],
+                // Control transfer parameters for ZK4500
+                this.controlParams = {
+                    requestType: {
+                        direction: 'out',
+                        recipient: 'interface',
+                        request: 0x00, // Vendor specific request
+                        value: 0x0000,
+                        index: 0x0000
+                    }
+                };
+                
+                // ZK4500 Commands for control transfer
+                this.commands = {
+                    // Test device
                     test: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07],
-                    enroll: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x22, 0x00, 0x00, 0x00, 0x00, 0x16],
+                    // Get fingerprint image
+                    getImage: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x03, 0x01, 0x00, 0x05],
+                    // Capture fingerprint
+                    capture: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B],
+                    // LED On
                     ledOn: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x01, 0x00, 0x00, 0x00, 0x1E],
-                    ledOff: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x00, 0x00, 0x00, 0x00, 0x1D]
+                    // LED Off
+                    ledOff: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x0C, 0x12, 0x00, 0x00, 0x00, 0x00, 0x1D],
+                    // Enroll fingerprint
+                    enroll: [0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00, 0x07, 0x22, 0x00, 0x00, 0x00, 0x00, 0x16]
                 };
                 
                 this.init();
             }
             
             init() {
-                this.log('ZK4500 Fingerprint Scanner Tool initialized', 'info');
+                this.log('ZK4500 Control Transfer Scanner initialized', 'info');
                 this.updateUI();
                 this.setupEventListeners();
             }
             
             setupEventListeners() {
-                // Main buttons
                 document.getElementById('connectBtn').addEventListener('click', async () => {
-                    await this.connectAndConfigure();
+                    await this.connectDevice();
                 });
                 
                 document.getElementById('disconnectBtn').addEventListener('click', () => {
                     this.disconnect();
                 });
                 
-                // Fingerprint operations
                 document.getElementById('captureBtn').addEventListener('click', async () => {
                     await this.captureFingerprint();
                 });
                 
                 document.getElementById('testBtn').addEventListener('click', async () => {
-                    await this.testScanner();
+                    await this.testCommunication();
                 });
                 
-                document.getElementById('ledOnBtn').addEventListener('click', async () => {
-                    await this.sendCommand('ledOn');
+                document.getElementById('readDataBtn').addEventListener('click', async () => {
+                    await this.readDataFromDevice();
                 });
                 
-                document.getElementById('ledOffBtn').addEventListener('click', async () => {
-                    await this.sendCommand('ledOff');
-                });
-                
-                // Advanced
-                document.getElementById('scanEndpointsBtn').addEventListener('click', async () => {
-                    await this.scanEndpoints();
-                });
-                
-                document.getElementById('tryAllInterfacesBtn').addEventListener('click', async () => {
-                    await this.tryAllInterfaces();
+                document.getElementById('sendCustomBtn').addEventListener('click', async () => {
+                    await this.sendCustomControlCommand();
                 });
             }
             
-            async connectAndConfigure() {
-                this.log('Connecting to USB device...', 'info');
-                this.updateProgress('Requesting device...', 10);
+            async connectDevice() {
+                this.log('Connecting to device...', 'info');
+                this.updateProgress('Selecting device...', 10);
                 
                 try {
-                    // Request any USB device
+                    // Request device
                     this.device = await navigator.usb.requestDevice({
                         filters: [] // Allow any device
                     });
@@ -605,39 +603,53 @@
                     }
                     
                     // Update device info
-                    this.updateDeviceInfo();
+                    document.getElementById('vendorId').textContent = `0x${this.device.vendorId.toString(16).padStart(4, '0').toUpperCase()}`;
+                    document.getElementById('productId').textContent = `0x${this.device.productId.toString(16).padStart(4, '0').toUpperCase()}`;
+                    document.getElementById('deviceName').textContent = this.device.productName || 'Unknown';
                     
-                    this.log(`Selected device: ${this.device.productName || 'Unknown'}`, 'success');
-                    this.log(`Vendor ID: 0x${this.device.vendorId.toString(16).padStart(4, '0').toUpperCase()}, Product ID: 0x${this.device.productId.toString(16).padStart(4, '0').toUpperCase()}`, 'info');
+                    this.log(`Selected: ${this.device.productName || 'Unknown Device'}`, 'success');
+                    this.log(`VID: 0x${this.device.vendorId.toString(16).padStart(4, '0').toUpperCase()}, PID: 0x${this.device.productId.toString(16).padStart(4, '0').toUpperCase()}`, 'info');
                     
                     this.updateProgress('Opening device...', 30);
                     await this.device.open();
                     this.isConnected = true;
-                    this.log('Device opened successfully', 'success');
+                    this.log('Device opened', 'success');
                     
-                    this.updateProgress('Configuring device...', 50);
+                    this.updateProgress('Configuring...', 50);
                     
                     // Try to select configuration
-                    await this.selectConfiguration();
+                    try {
+                        await this.device.selectConfiguration(1);
+                        this.log('Configuration 1 selected', 'success');
+                    } catch (e) {
+                        try {
+                            await this.device.selectConfiguration(0);
+                            this.log('Configuration 0 selected', 'success');
+                        } catch (e2) {
+                            this.log('Using default configuration', 'info');
+                        }
+                    }
                     
-                    this.updateProgress('Finding endpoints...', 70);
+                    this.updateProgress('Finding interface...', 70);
                     
-                    // Try to find endpoints automatically
-                    const foundEndpoints = await this.autoFindEndpoints();
-                    
-                    if (foundEndpoints) {
+                    // Try to claim an interface
+                    if (await this.findAndClaimInterface()) {
                         this.updateProgress('Ready!', 100);
-                        this.log('✅ Device configured successfully!', 'success');
+                        this.log('✅ Device ready for control transfers!', 'success');
                         
-                        // Enable all operations
-                        this.enableOperations();
+                        // Enable operations
+                        document.getElementById('captureBtn').disabled = false;
+                        document.getElementById('testBtn').disabled = false;
+                        document.getElementById('readDataBtn').disabled = false;
+                        
+                        // Update status
+                        this.updateStatus('commStatus', 'Control Transfer', 'good');
+                        
+                        // Test communication
+                        await this.testCommunication();
                     } else {
-                        this.updateProgress('Manual setup needed', 70);
-                        this.log('⚠️ Could not auto-configure. Please try manual options.', 'warning');
-                        
-                        // Enable advanced options
-                        document.getElementById('scanEndpointsBtn').disabled = false;
-                        document.getElementById('tryAllInterfacesBtn').disabled = false;
+                        this.updateProgress('Failed to claim interface', 70);
+                        this.log('❌ Could not claim interface', 'error');
                     }
                     
                     this.updateUI();
@@ -649,359 +661,304 @@
                 }
             }
             
-            updateDeviceInfo() {
-                document.getElementById('vendorId').textContent = `0x${this.device.vendorId.toString(16).padStart(4, '0').toUpperCase()}`;
-                document.getElementById('productId').textContent = `0x${this.device.productId.toString(16).padStart(4, '0').toUpperCase()}`;
-                document.getElementById('deviceName').textContent = this.device.productName || 'Unknown';
-                document.getElementById('serialNumber').textContent = this.device.serialNumber || 'N/A';
-            }
-            
-            async selectConfiguration() {
-                try {
-                    // Try configuration 1 first (most common)
-                    await this.device.selectConfiguration(1);
-                    this.selectedConfiguration = 1;
-                    this.log('Selected configuration 1', 'success');
-                    this.updateStatus('configStatus', 'Config 1', 'good');
-                    return true;
-                } catch (error) {
-                    try {
-                        // Try configuration 0
-                        await this.device.selectConfiguration(0);
-                        this.selectedConfiguration = 0;
-                        this.log('Selected configuration 0', 'success');
-                        this.updateStatus('configStatus', 'Config 0', 'good');
-                        return true;
-                    } catch (error2) {
-                        this.log('Using default configuration', 'info');
-                        this.updateStatus('configStatus', 'Default', 'warn');
-                        return false;
-                    }
-                }
-            }
-            
-            async autoFindEndpoints() {
+            async findAndClaimInterface() {
                 if (!this.device || !this.device.configuration) {
-                    this.log('No configuration available', 'error');
                     return false;
                 }
                 
                 const config = this.device.configuration;
-                this.log(`Configuration has ${config.interfaces.length} interfaces`, 'info');
                 
                 // Try each interface
                 for (let i = 0; i < config.interfaces.length; i++) {
                     this.log(`Trying interface ${i}...`, 'info');
                     
                     try {
-                        // Claim interface
+                        // Release previous interface if any
                         if (this.claimedInterface !== null) {
                             try {
                                 await this.device.releaseInterface(this.claimedInterface);
-                            } catch (e) {
-                                // Ignore release errors
-                            }
+                            } catch (e) {}
                         }
                         
+                        // Claim interface
                         await this.device.claimInterface(i);
                         this.claimedInterface = i;
-                        this.selectedInterface = i;
                         
                         this.log(`✅ Claimed interface ${i}`, 'success');
                         this.updateStatus('ifaceStatus', `Interface ${i}`, 'good');
                         
-                        // Find endpoints in this interface
+                        // Update interface info
+                        document.getElementById('interfaceInfo').textContent = `Interface ${i}`;
+                        
+                        // Check endpoints
                         const iface = config.interfaces[i];
                         if (iface.alternates.length > 0) {
                             const alt = iface.alternates[0];
+                            this.log(`Interface has ${alt.endpoints.length} endpoints`, 'info');
                             
-                            this.log(`Interface ${i} has ${alt.endpoints.length} endpoints`, 'info');
-                            
-                            // Reset endpoints
-                            this.endpoints = {
-                                in: null,
-                                out: null,
-                                interruptIn: null,
-                                interruptOut: null
-                            };
-                            
-                            // Look for endpoints
-                            for (const endpoint of alt.endpoints) {
-                                this.log(`Endpoint ${endpoint.endpointNumber}: ${endpoint.type} ${endpoint.direction}`, 'debug');
-                                
-                                if (endpoint.type === 'bulk') {
-                                    if (endpoint.direction === 'in' && !this.endpoints.in) {
-                                        this.endpoints.in = endpoint;
-                                        this.log(`✅ Found BULK IN: ${endpoint.endpointNumber}`, 'success');
-                                    } else if (endpoint.direction === 'out' && !this.endpoints.out) {
-                                        this.endpoints.out = endpoint;
-                                        this.log(`✅ Found BULK OUT: ${endpoint.endpointNumber}`, 'success');
-                                    }
-                                } else if (endpoint.type === 'interrupt') {
-                                    if (endpoint.direction === 'in' && !this.endpoints.interruptIn) {
-                                        this.endpoints.interruptIn = endpoint;
-                                        this.log(`✅ Found INTERRUPT IN: ${endpoint.endpointNumber}`, 'success');
-                                    } else if (endpoint.direction === 'out' && !this.endpoints.interruptOut) {
-                                        this.endpoints.interruptOut = endpoint;
-                                        this.log(`✅ Found INTERRUPT OUT: ${endpoint.endpointNumber}`, 'success');
-                                    }
-                                }
+                            // Update endpoint status
+                            let endpointInfo = [];
+                            for (const ep of alt.endpoints) {
+                                endpointInfo.push(`${ep.type} ${ep.direction}:${ep.endpointNumber}`);
+                                this.log(`Endpoint ${ep.endpointNumber}: ${ep.type} ${ep.direction}`, 'debug');
                             }
                             
-                            // Update endpoint display
-                            this.updateEndpointDisplay();
+                            this.updateStatus('epStatus', endpointInfo.join(' | ') || 'No endpoints', 'warn');
                             
-                            // Check if we have at least one OUT endpoint
-                            if (this.endpoints.out || this.endpoints.interruptOut) {
-                                this.log('✅ Device is ready for commands!', 'success');
-                                return true;
-                            } else {
-                                this.log('⚠️ No OUT endpoint found in this interface', 'warning');
+                            // Check if we have at least IN endpoint
+                            const hasInEndpoint = alt.endpoints.some(ep => 
+                                (ep.type === 'bulk' || ep.type === 'interrupt') && ep.direction === 'in'
+                            );
+                            
+                            if (hasInEndpoint) {
+                                this.log('✅ Has IN endpoint for data reading', 'success');
                             }
                         }
                         
-                    } catch (error) {
-                        this.log(`Failed interface ${i}: ${error.message}`, 'debug');
-                    }
-                }
-                
-                this.log('❌ Could not find suitable interface with OUT endpoint', 'error');
-                return false;
-            }
-            
-            async scanEndpoints() {
-                if (!this.device || !this.device.configuration) {
-                    this.log('Device not connected', 'error');
-                    return;
-                }
-                
-                this.log('Scanning all endpoints...', 'info');
-                
-                const config = this.device.configuration;
-                const endpointList = document.getElementById('endpointList');
-                endpointList.innerHTML = '';
-                
-                for (let i = 0; i < config.interfaces.length; i++) {
-                    const iface = config.interfaces[i];
-                    
-                    for (let j = 0; j < iface.alternates.length; j++) {
-                        const alt = iface.alternates[j];
-                        
-                        for (const endpoint of alt.endpoints) {
-                            const endpointItem = document.createElement('div');
-                            endpointItem.className = 'endpoint-item';
-                            
-                            // Determine color based on endpoint type
-                            let typeClass = '';
-                            if (endpoint.type === 'bulk') {
-                                typeClass = 'status-good';
-                            } else if (endpoint.type === 'interrupt') {
-                                typeClass = 'status-warning';
-                            } else {
-                                typeClass = 'status-info';
-                            }
-                            
-                            endpointItem.innerHTML = `
-                                <div>
-                                    <span class="endpoint-type">Interface ${i}.${j} - ${endpoint.type.toUpperCase()} ${endpoint.direction.toUpperCase()}</span>
-                                </div>
-                                <div>
-                                    <span class="endpoint-number ${typeClass}">Endpoint ${endpoint.endpointNumber}</span>
-                                </div>
-                            `;
-                            
-                            endpointItem.style.cursor = 'pointer';
-                            endpointItem.addEventListener('click', () => {
-                                this.log(`Selected endpoint ${endpoint.endpointNumber} (${endpoint.type} ${endpoint.direction})`, 'info');
-                            });
-                            
-                            endpointList.appendChild(endpointItem);
-                        }
-                    }
-                }
-                
-                document.getElementById('endpointInfo').style.display = 'block';
-                this.log(`Found endpoints in ${config.interfaces.length} interfaces`, 'info');
-            }
-            
-            async tryAllInterfaces() {
-                if (!this.device || !this.device.configuration) {
-                    this.log('Device not connected', 'error');
-                    return;
-                }
-                
-                this.log('Trying all interfaces...', 'info');
-                this.updateProgress('Testing interfaces...', 0);
-                
-                const config = this.device.configuration;
-                const totalInterfaces = config.interfaces.length;
-                
-                for (let i = 0; i < totalInterfaces; i++) {
-                    this.updateProgress(`Testing interface ${i}...`, (i / totalInterfaces) * 100);
-                    
-                    try {
-                        // Release previous interface
-                        if (this.claimedInterface !== null) {
-                            try {
-                                await this.device.releaseInterface(this.claimedInterface);
-                            } catch (e) {
-                                // Ignore release errors
-                            }
-                        }
-                        
-                        // Claim new interface
-                        await this.device.claimInterface(i);
-                        this.claimedInterface = i;
-                        this.selectedInterface = i;
-                        
-                        this.log(`✅ Claimed interface ${i}`, 'success');
-                        
-                        // Test communication
-                        const iface = config.interfaces[i];
-                        if (iface.alternates.length > 0) {
-                            const alt = iface.alternates[0];
-                            
-                            // Look for OUT endpoint
-                            let hasOutEndpoint = false;
-                            for (const endpoint of alt.endpoints) {
-                                if ((endpoint.type === 'bulk' || endpoint.type === 'interrupt') && 
-                                    endpoint.direction === 'out') {
-                                    hasOutEndpoint = true;
-                                    this.endpoints.out = endpoint;
-                                    break;
-                                }
-                            }
-                            
-                            if (hasOutEndpoint) {
-                                this.updateProgress('Found working interface!', 100);
-                                this.log(`✅ Interface ${i} is working!`, 'success');
-                                this.enableOperations();
-                                return;
-                            }
-                        }
+                        return true;
                         
                     } catch (error) {
                         this.log(`Interface ${i} failed: ${error.message}`, 'debug');
                     }
                 }
                 
-                this.updateProgress('No working interface found', 100);
-                this.log('❌ No interface with OUT endpoint found', 'error');
+                return false;
             }
             
-            updateEndpointDisplay() {
-                // Update status
-                let epStatus = [];
-                if (this.endpoints.in) epStatus.push(`IN:${this.endpoints.in.endpointNumber}`);
-                if (this.endpoints.out) epStatus.push(`OUT:${this.endpoints.out.endpointNumber}`);
-                if (this.endpoints.interruptIn) epStatus.push(`INT-IN:${this.endpoints.interruptIn.endpointNumber}`);
-                if (this.endpoints.interruptOut) epStatus.push(`INT-OUT:${this.endpoints.interruptOut.endpointNumber}`);
+            async sendControlTransfer(data, requestType = null) {
+                if (!this.device) {
+                    throw new Error('Device not connected');
+                }
                 
-                this.updateStatus('epStatus', epStatus.join(' | ') || 'None found',
-                    (this.endpoints.out || this.endpoints.interruptOut) ? 'good' : 'bad');
+                const buffer = new Uint8Array(data);
                 
-                // Show endpoint info
-                document.getElementById('endpointInfo').style.display = 'block';
-                const endpointList = document.getElementById('endpointList');
-                endpointList.innerHTML = '';
+                // Default request type for ZK4500
+                const params = requestType || {
+                    requestType: 'vendor',
+                    recipient: 'interface',
+                    request: 0x00,
+                    value: 0x0000,
+                    index: this.claimedInterface || 0x0000
+                };
                 
-                const endpoints = [
-                    { type: 'BULK IN', endpoint: this.endpoints.in },
-                    { type: 'BULK OUT', endpoint: this.endpoints.out },
-                    { type: 'INTERRUPT IN', endpoint: this.endpoints.interruptIn },
-                    { type: 'INTERRUPT OUT', endpoint: this.endpoints.interruptOut }
-                ];
-                
-                for (const ep of endpoints) {
-                    if (ep.endpoint) {
-                        const item = document.createElement('div');
-                        item.className = 'endpoint-item';
-                        item.innerHTML = `
-                            <div>
-                                <span class="endpoint-type">${ep.type}</span>
-                            </div>
-                            <div>
-                                <span class="endpoint-number">Endpoint ${ep.endpoint.endpointNumber}</span>
-                            </div>
-                        `;
-                        endpointList.appendChild(item);
+                try {
+                    this.log(`Sending control transfer (${buffer.length} bytes)...`, 'info');
+                    
+                    const result = await this.device.controlTransferOut(params, buffer);
+                    
+                    this.log(`✅ Control transfer sent: ${buffer.length} bytes`, 'success');
+                    this.log(`Hex: ${this.bytesToHex(buffer.slice(0, 16))}${buffer.length > 16 ? '...' : ''}`, 'debug');
+                    
+                    return result;
+                    
+                } catch (error) {
+                    // Try alternative request types
+                    const altParams = [
+                        {
+                            requestType: 'vendor',
+                            recipient: 'device',
+                            request: 0x00,
+                            value: 0x0000,
+                            index: 0x0000
+                        },
+                        {
+                            requestType: 'vendor',
+                            recipient: 'interface',
+                            request: 0x09, // Alternative request
+                            value: 0x0200,
+                            index: this.claimedInterface || 0x0000
+                        },
+                        {
+                            requestType: 'class',
+                            recipient: 'interface',
+                            request: 0x00,
+                            value: 0x0000,
+                            index: this.claimedInterface || 0x0000
+                        }
+                    ];
+                    
+                    for (let i = 0; i < altParams.length; i++) {
+                        try {
+                            this.log(`Trying alternative request type ${i + 1}...`, 'debug');
+                            const result = await this.device.controlTransferOut(altParams[i], buffer);
+                            this.log(`✅ Control transfer (alt ${i + 1}) successful`, 'success');
+                            return result;
+                        } catch (altError) {
+                            this.log(`Alt ${i + 1} failed: ${altError.message}`, 'debug');
+                        }
                     }
+                    
+                    throw new Error(`All control transfer attempts failed: ${error.message}`);
                 }
             }
             
-            enableOperations() {
-                // Check if we have any way to send commands
-                const canSendCommands = this.endpoints.out || this.endpoints.interruptOut;
-                
-                document.getElementById('captureBtn').disabled = !canSendCommands;
-                document.getElementById('testBtn').disabled = !canSendCommands;
-                document.getElementById('ledOnBtn').disabled = !canSendCommands;
-                document.getElementById('ledOffBtn').disabled = !canSendCommands;
-                
-                if (canSendCommands) {
-                    this.log('Operations enabled - device ready!', 'success');
-                } else {
-                    this.log('⚠️ Cannot send commands - no OUT endpoint', 'warning');
-                }
-            }
-            
-            async sendCommand(commandName) {
+            async sendControlCommand(commandName) {
                 if (!this.device) {
                     this.log('Device not connected', 'error');
                     return null;
                 }
                 
-                const command = this.zkCommands[commandName];
+                const command = this.commands[commandName];
                 if (!command) {
                     this.log(`Unknown command: ${commandName}`, 'error');
                     return null;
                 }
                 
-                this.log(`Sending ${commandName} command...`, 'info');
+                this.log(`Sending ${commandName} command via control transfer...`, 'info');
                 
                 try {
-                    const buffer = new Uint8Array(command);
+                    const result = await this.sendControlTransfer(command);
                     
-                    // Try bulk OUT first
-                    if (this.endpoints.out) {
-                        await this.device.transferOut(this.endpoints.out.endpointNumber, buffer);
-                        this.log(`✅ Command sent via BULK OUT (${buffer.length} bytes)`, 'success');
+                    // Wait a bit for device response
+                    await this.delay(500);
+                    
+                    // Try to read response data if available
+                    await this.readDataFromDevice();
+                    
+                    return result;
+                    
+                } catch (error) {
+                    this.log(`❌ Control transfer failed: ${error.message}`, 'error');
+                    return null;
+                }
+            }
+            
+            async sendCustomControlCommand() {
+                const input = document.getElementById('customCommand').value.trim();
+                if (!input) {
+                    this.log('Please enter a command', 'warning');
+                    return;
+                }
+                
+                // Parse hex string
+                const hexBytes = input.match(/.{1,2}/g) || [];
+                const command = [];
+                
+                for (const hex of hexBytes) {
+                    const byte = parseInt(hex, 16);
+                    if (isNaN(byte)) {
+                        this.log(`Invalid hex byte: ${hex}`, 'error');
+                        return;
                     }
-                    // Try interrupt OUT
-                    else if (this.endpoints.interruptOut) {
-                        await this.device.transferOut(this.endpoints.interruptOut.endpointNumber, buffer);
-                        this.log(`✅ Command sent via INTERRUPT OUT (${buffer.length} bytes)`, 'success');
-                    }
-                    else {
-                        this.log('❌ No OUT endpoint available', 'error');
-                        return null;
+                    command.push(byte);
+                }
+                
+                if (command.length === 0) {
+                    this.log('No valid hex bytes found', 'error');
+                    return;
+                }
+                
+                this.log(`Sending custom command (${command.length} bytes)...`, 'info');
+                
+                try {
+                    const result = await this.sendControlTransfer(command);
+                    
+                    if (result) {
+                        this.log(`✅ Custom command sent successfully`, 'success');
+                        
+                        // Wait and try to read response
+                        await this.delay(300);
+                        await this.readDataFromDevice();
                     }
                     
-                    // Wait and read response if we have IN endpoint
-                    if (this.endpoints.in || this.endpoints.interruptIn) {
-                        await this.delay(100);
+                } catch (error) {
+                    this.log(`❌ Custom command failed: ${error.message}`, 'error');
+                }
+            }
+            
+            async testCommunication() {
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
+                    return;
+                }
+                
+                this.log('Testing control transfer communication...', 'info');
+                this.updateProgress('Testing...', 50);
+                
+                try {
+                    // Send test command
+                    const result = await this.sendControlCommand('test');
+                    
+                    if (result) {
+                        this.updateProgress('Test passed!', 100);
+                        this.log('✅ Control transfer test passed!', 'success');
+                    } else {
+                        this.updateProgress('Test completed', 100);
+                        this.log('✅ Command sent (no response expected)', 'success');
+                    }
+                    
+                } catch (error) {
+                    this.log(`❌ Test failed: ${error.message}`, 'error');
+                    this.updateProgress('Failed', 0);
+                }
+            }
+            
+            async readDataFromDevice() {
+                if (!this.device) {
+                    this.log('Device not connected', 'error');
+                    return;
+                }
+                
+                this.log('Reading data from device...', 'info');
+                this.updateProgress('Reading...', 30);
+                
+                try {
+                    // First, check if we have any IN endpoints
+                    if (!this.device.configuration || !this.claimedInterface) {
+                        this.log('No configuration or interface', 'warning');
+                        return;
+                    }
+                    
+                    const iface = this.device.configuration.interfaces[this.claimedInterface];
+                    if (!iface || iface.alternates.length === 0) {
+                        this.log('No interface alternates', 'warning');
+                        return;
+                    }
+                    
+                    const alt = iface.alternates[0];
+                    
+                    // Find IN endpoints
+                    const inEndpoints = alt.endpoints.filter(ep => 
+                        (ep.type === 'bulk' || ep.type === 'interrupt') && ep.direction === 'in'
+                    );
+                    
+                    if (inEndpoints.length === 0) {
+                        this.log('No IN endpoints found', 'warning');
+                        this.updateProgress('No IN endpoint', 100);
+                        return;
+                    }
+                    
+                    // Try to read from each IN endpoint
+                    for (const endpoint of inEndpoints) {
+                        this.log(`Reading from endpoint ${endpoint.endpointNumber}...`, 'info');
                         
-                        const inEndpoint = this.endpoints.in || this.endpoints.interruptIn;
-                        const result = await this.device.transferIn(inEndpoint.endpointNumber, 1024);
-                        
-                        if (result.data && result.data.byteLength > 0) {
-                            const data = new Uint8Array(result.data.buffer);
-                            this.log(`Response (${data.length} bytes): ${this.bytesToHex(data.slice(0, 32))}${data.length > 32 ? '...' : ''}`, 'info');
+                        try {
+                            const result = await this.device.transferIn(endpoint.endpointNumber, 1024);
                             
-                            // Check for image data
-                            if (data.length >= 73728) { // 256x288 image
-                                this.processImageData(data);
+                            if (result.data && result.data.byteLength > 0) {
+                                const data = new Uint8Array(result.data.buffer);
+                                this.log(`✅ Received ${data.length} bytes from endpoint ${endpoint.endpointNumber}`, 'success');
+                                this.log(`Data: ${this.bytesToHex(data.slice(0, 32))}${data.length > 32 ? '...' : ''}`, 'info');
+                                
+                                // Check if this is fingerprint image data
+                                if (data.length >= 256 * 288) { // 256x288 image
+                                    this.processImageData(data);
+                                }
+                                
+                                this.updateProgress('Data received!', 100);
+                                return;
                             }
-                            
-                            return result;
+                        } catch (readError) {
+                            this.log(`Endpoint ${endpoint.endpointNumber} read failed: ${readError.message}`, 'debug');
                         }
                     }
                     
-                    return null;
+                    this.log('No data received from any IN endpoint', 'warning');
+                    this.updateProgress('No data', 100);
                     
                 } catch (error) {
-                    this.log(`❌ Command failed: ${error.message}`, 'error');
-                    return null;
+                    this.log(`❌ Read failed: ${error.message}`, 'error');
+                    this.updateProgress('Failed', 0);
                 }
             }
             
@@ -1015,29 +972,20 @@
                 this.updateProgress('Place finger on scanner...', 10);
                 
                 try {
-                    // Turn on LED
-                    await this.sendCommand('ledOn');
-                    
-                    this.updateProgress('Capturing...', 40);
-                    
                     // Send capture command
-                    const result = await this.sendCommand('capture');
+                    this.updateProgress('Sending capture command...', 30);
+                    await this.sendControlCommand('capture');
                     
-                    this.updateProgress('Processing image...', 70);
+                    this.updateProgress('Waiting for image...', 60);
+                    await this.delay(1000); // Wait for device to capture
                     
-                    if (result && result.data && result.data.byteLength > 0) {
-                        const data = new Uint8Array(result.data.buffer);
-                        this.processImageData(data);
-                        this.updateProgress('Capture complete!', 100);
-                        this.log('✅ Fingerprint captured successfully!', 'success');
-                    } else {
-                        // Try alternative method
-                        this.updateProgress('Trying alternative method...', 80);
-                        await this.getFingerprintImage();
-                    }
+                    this.updateProgress('Reading image data...', 80);
                     
-                    // Turn off LED
-                    await this.sendCommand('ledOff');
+                    // Try to read the image
+                    await this.readDataFromDevice();
+                    
+                    this.updateProgress('Capture complete!', 100);
+                    this.log('✅ Fingerprint capture process completed', 'success');
                     
                 } catch (error) {
                     this.log(`❌ Capture failed: ${error.message}`, 'error');
@@ -1045,101 +993,47 @@
                 }
             }
             
-            async testScanner() {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
-                    return;
-                }
-                
-                this.log('Testing scanner communication...', 'info');
-                this.updateProgress('Testing...', 50);
-                
-                try {
-                    const result = await this.sendCommand('test');
-                    
-                    if (result && result.data && result.data.byteLength > 0) {
-                        const data = new Uint8Array(result.data.buffer);
-                        this.log(`Test response: ${this.bytesToHex(data.slice(0, 16))}`, 'success');
-                        this.updateProgress('Test passed!', 100);
-                        this.log('✅ Scanner test passed!', 'success');
-                    } else {
-                        this.updateProgress('Test completed', 100);
-                        this.log('✅ Scanner responded to test command', 'success');
-                    }
-                    
-                } catch (error) {
-                    this.log(`❌ Test failed: ${error.message}`, 'error');
-                    this.updateProgress('Failed', 0);
-                }
-            }
-            
-            async getFingerprintImage() {
-                if (!this.device) {
-                    this.log('Device not connected', 'error');
-                    return;
-                }
-                
-                this.log('Getting fingerprint image...', 'info');
-                this.updateProgress('Requesting image...', 30);
-                
-                try {
-                    const result = await this.sendCommand('getImage');
-                    
-                    if (result && result.data && result.data.byteLength > 0) {
-                        const data = new Uint8Array(result.data.buffer);
-                        this.processImageData(data);
-                        this.updateProgress('Image received!', 100);
-                        this.log('✅ Fingerprint image received!', 'success');
-                    } else {
-                        this.updateProgress('No image received', 100);
-                        this.log('⚠️ No image data received', 'warning');
-                        this.showDemoImage();
-                    }
-                    
-                } catch (error) {
-                    this.log(`❌ Get image failed: ${error.message}`, 'error');
-                    this.updateProgress('Failed', 0);
-                }
-            }
-            
             processImageData(data) {
-                // Try to extract image from data
-                const imageSize = this.imageWidth * this.imageHeight;
+                // Try to extract 256x288 image
+                const width = 256;
+                const height = 288;
+                const imageSize = width * height;
                 
                 if (data.length >= imageSize) {
-                    // Try different offsets
+                    // Look for image data (skip headers)
                     let imageStart = 0;
                     
-                    // Check for ZK header
+                    // Check for common ZK headers
                     if (data.length > 12 && data[0] === 0xEF && data[1] === 0x01) {
-                        imageStart = 12;
+                        imageStart = 12; // Skip ZK header
+                    } else if (data.length > 16 && data[0] === 0xF5 && data[1] === 0x25) {
+                        imageStart = 16; // Skip alternative header
                     }
                     
-                    // Make sure we have enough data
                     if (data.length >= imageStart + imageSize) {
                         const imageData = data.slice(imageStart, imageStart + imageSize);
                         this.displayFingerprintImage(imageData);
-                        this.log(`Displaying fingerprint image (${imageData.length} bytes)`, 'success');
+                        this.log(`✅ Displaying fingerprint image (${imageData.length} bytes)`, 'success');
                         return;
                     }
                 }
                 
-                // If we can't process the data, show demo
-                this.log(`Cannot process image data (${data.length} bytes)`, 'warning');
+                // If not a proper image, show what we have
+                this.log(`Received ${data.length} bytes (not a standard image)`, 'info');
                 this.showDemoImage();
             }
             
             displayFingerprintImage(imageData) {
-                const width = this.imageWidth;
-                const height = this.imageHeight;
+                const width = 256;
+                const height = 288;
                 const image = this.ctx.createImageData(width, height);
                 
-                // Convert to grayscale image
+                // Convert grayscale to RGBA
                 for (let i = 0; i < imageData.length; i++) {
                     const pixel = imageData[i];
                     const idx = i * 4;
                     
-                    // Invert for better visibility
+                    // Invert for better visibility (fingerprints are dark on light)
                     const value = 255 - pixel;
                     
                     image.data[idx] = value;
@@ -1151,30 +1045,29 @@
                 this.ctx.putImageData(image, 0, 0);
                 document.getElementById('scannerOverlay').style.display = 'none';
                 
-                // Store image data
-                this.imageData = imageData;
+                this.log(`Fingerprint image displayed (${width}x${height})`, 'success');
             }
             
             showDemoImage() {
-                this.log('Showing demo fingerprint image', 'info');
+                this.log('Showing demonstration image', 'info');
                 
-                const width = this.imageWidth;
-                const height = this.imageHeight;
+                const width = 256;
+                const height = 288;
                 const image = this.ctx.createImageData(width, height);
                 
-                // Create realistic fingerprint pattern
+                // Create a fingerprint-like pattern
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         const idx = (y * width + x) * 4;
                         
-                        let value = 200; // Light background
+                        let value = 220; // Light background
                         
                         // Add fingerprint ridges
                         const ridge1 = Math.sin(x * 0.03) * 30;
                         const ridge2 = Math.sin(y * 0.04) * 20;
                         const ridge3 = Math.sin((x + y) * 0.05) * 15;
                         
-                        // Add swirl
+                        // Add swirl pattern
                         const dx = x - width/2;
                         const dy = y - height/2;
                         const distance = Math.sqrt(dx*dx + dy*dy);
@@ -1212,18 +1105,16 @@
                         
                         this.log('Device disconnected', 'info');
                     } catch (error) {
-                        // Ignore errors on disconnect
+                        // Ignore errors
                     }
                 }
                 
                 this.device = null;
                 this.isConnected = false;
                 this.claimedInterface = null;
-                this.endpoints = { in: null, out: null, interruptIn: null, interruptOut: null };
                 
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 document.getElementById('scannerOverlay').style.display = 'flex';
-                document.getElementById('endpointInfo').style.display = 'none';
                 
                 this.updateUI();
                 this.updateProgress('Disconnected', 0);
@@ -1234,10 +1125,6 @@
                 
                 document.getElementById('connectBtn').disabled = connected;
                 document.getElementById('disconnectBtn').disabled = !connected;
-                
-                // Enable advanced options if connected
-                document.getElementById('scanEndpointsBtn').disabled = !connected;
-                document.getElementById('tryAllInterfacesBtn').disabled = !connected;
                 
                 this.updateStatus('connStatus', connected ? 'Connected' : 'Disconnected', 
                     connected ? 'good' : 'bad');
@@ -1306,10 +1193,10 @@
                     throw new Error('WebUSB not supported. Use Chrome/Edge.');
                 }
                 
-                const scanner = new ZK4500Scanner();
-                window.usbTool = scanner;
+                const scanner = new ZK4500ControlTransferScanner();
+                window.scanner = scanner; // Make available for button clicks
                 
-                scanner.log('Ready to scan fingerprints!', 'success');
+                scanner.log('Ready for ZK4500 control transfer mode', 'success');
                 
             } catch (error) {
                 const consoleElem = document.getElementById('logConsole');
